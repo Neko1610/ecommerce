@@ -1,68 +1,90 @@
-🛒 Fullstack E-Commerce System
+🛒 E-Commerce Fullstack App
 
-Một hệ thống thương mại điện tử hoàn chỉnh gồm:
+Fullstack E-Commerce System gồm Mobile App (Flutter), Backend (Spring Boot) và Admin Dashboard.
 
-📱 Mobile App (Flutter)
-🌐 Admin Dashboard (Web)
-⚙️ Backend API (Spring Boot)
-
-Hệ thống hỗ trợ từ phía người dùng đến quản trị viên, bao gồm quản lý sản phẩm, đơn hàng, người dùng và thanh toán.
-
-🚀 Demo Features
-👤 User (Mobile App)
-🔐 Đăng nhập / Đăng ký (Firebase Auth)
-🛍 Xem sản phẩm theo danh mục
-🔎 Tìm kiếm sản phẩm
-📦 Xem chi tiết sản phẩm
-🛒 Thêm vào giỏ hàng
-💳 Đặt hàng (Checkout)
-📍 Quản lý địa chỉ
-📜 Lịch sử đơn hàng
-🛠 Admin Dashboard
-📂 Quản lý Category (upload ảnh Cloudinary)
-📦 Quản lý Product
-🎟 Quản lý Voucher
-👥 Quản lý User
-📊 Dashboard thống kê
-⚙️ Backend API
-🔐 Xác thực Firebase + JWT
-📡 RESTful API
-🗄 MySQL Database
-☁️ Upload ảnh Cloudinary
+🚀 Features
+User (Mobile)
+Login / Register (Firebase Auth)
+Browse products by category
+Search products
+Product details
+Cart & Checkout
+Order history
+Address management
+Admin (Dashboard)
+CRUD Category (upload image Cloudinary)
+CRUD Product
+Manage Users
+Manage Voucher
+Dashboard statistics
+Backend API
+RESTful API
+Firebase Authentication + JWT
+MySQL Database
+Cloudinary image upload
 🧱 Tech Stack
-📱 Mobile App
-Flutter
-Dart
-REST API
-🌐 Admin Dashboard
-ReactJS / NextJS (tuỳ bạn đang dùng)
-Axios
-⚙️ Backend
-Spring Boot
-Spring Security
-Firebase Admin SDK
-JWT Authentication
-MySQL
-Cloudinary
+Frontend Mobile: Flutter
+Admin Dashboard: React / NextJS
+Backend: Spring Boot
+Database: MySQL
+Auth: Firebase + JWT
+Storage: Cloudinary
 📁 Project Structure
 ecommerce-system/
 │
-├── mobile_app/            # Flutter App
-│   ├── lib/
-│   ├── screens/
-│   ├── services/
-│   └── models/
-│
-├── backend/               # Spring Boot API
-│   ├── controller/
-│   ├── service/
-│   ├── repository/
-│   ├── model/
-│   └── config/
-│
-├── admin_dashboard/       # Web Admin
-│   ├── pages/
-│   ├── components/
-│   └── services/
-│
+├── mobile_app/
+├── backend/
+├── admin_dashboard/
 └── README.md
+⚙️ Setup
+1. Clone
+git clone https://github.com/your-username/ecommerce-system.git
+cd ecommerce-system
+2. Backend
+cd backend
+./mvnw spring-boot:run
+
+Config (application.properties):
+
+spring.datasource.url=jdbc:mysql://localhost:3306/ecommerce
+spring.datasource.username=root
+spring.datasource.password=yourpassword
+
+jwt.secret=your_secret
+cloudinary.cloud_name=xxx
+cloudinary.api_key=xxx
+cloudinary.api_secret=xxx
+3. Mobile App
+cd mobile_app
+flutter pub get
+flutter run
+4. Admin Dashboard
+cd admin_dashboard
+npm install
+npm run dev
+🔐 Auth Flow
+Firebase Login → ID Token → Backend Verify → JWT → API Access
+📡 API
+POST /auth/login
+GET /products
+POST /products
+PUT /products/{id}
+DELETE /products/{id}
+🖼 Image Upload
+Upload via backend
+Store on Cloudinary
+Save URL to database
+💰 Currency
+Default: USD ($)
+🛠 Roadmap
+Payment (Stripe / VNPay)
+Push Notification
+Dark Mode
+Product Reviews
+👨‍💻 Author
+
+Bảo Nguyễn
+
+📄 License
+
+MIT License
