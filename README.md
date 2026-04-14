@@ -5,8 +5,6 @@ Fullstack E-Commerce System gồm:
 - ⚙️ Backend (Spring Boot)
 - 🌐 Admin Dashboard
 
----
-
 ## 🚀 Features
 
 ### 👤 User (Mobile)
@@ -30,9 +28,7 @@ Fullstack E-Commerce System gồm:
 - Firebase Authentication + JWT
 - MySQL Database
 - Cloudinary image upload
-
----
-
+  
 ## 🧱 Tech Stack
 
 - **Mobile:** Flutter  
