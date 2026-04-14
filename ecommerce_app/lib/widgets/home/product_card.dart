@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../models/product.dart';
 import '../../screens/product_detail_screen.dart';
+import '../../providers/WishlistProvider.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -9,6 +12,14 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final variant = product.variants.isNotEmpty
+        ? product.variants.first
+        : null;
+
+    final price = variant?.price ?? product.minPrice;
+    final oldPrice = variant?.oldPrice;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -27,47 +38,96 @@ class ProductCard extends StatelessWidget {
 
         child: Column(
           children: [
-            /// IMAGE
+
+            /// 🔥 IMAGE + ❤️
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                child: Image.network(
-                  product.image,
-                  width: double.infinity,
-                  fit: BoxFit.contain,
-                ),
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: Image.network(
+                      product.image,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+
+                  /// ❤️ WISHLIST
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Consumer<WishlistProvider>(
+                      builder: (context, wishlist, _) {
+                        final isFav =
+                            wishlist.isFavorite(product.id);
+
+                        return GestureDetector(
+                          onTap: () {
+                            wishlist.toggle(product.id);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isFav
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: isFav
+                                  ? Colors.red
+                                  : Colors.grey,
+                              size: 18,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
 
-            /// INFO
+            /// 🔥 INFO
             Padding(
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Category", // sau này có thể lấy từ API
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
 
-                  SizedBox(height: 2),
-
+                  /// NAME
                   Text(
                     product.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
 
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
 
+                  /// PRICE
                   Text(
-                    "\$${product.price}",
-                    style: TextStyle(
+                    "\$${price.toStringAsFixed(0)}",
+                    style: const TextStyle(
                       color: Color(0xff137fec),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
+                  /// OLD PRICE
+                  if (oldPrice != null)
+                    Text(
+                      "\$${oldPrice.toStringAsFixed(0)}",
+                      style: const TextStyle(
+                        decoration: TextDecoration.lineThrough,
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
+                    ),
                 ],
               ),
             ),

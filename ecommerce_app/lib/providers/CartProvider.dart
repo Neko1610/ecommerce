@@ -6,56 +6,57 @@ class CartProvider extends ChangeNotifier {
 
   List<CartItem> get items => _items;
 
-  // ================= ADD =================
-  void addToCart(CartItem newItem) {
-    final index = _items.indexWhere(
-      (item) =>
-          item.productId == newItem.productId &&
-          item.color == newItem.color &&
-          item.size == newItem.size,
+  /// 🔥 ADD TO CART (DÙNG variantId)
+ void addToCart(CartItem newItem) {
+  final index = _items.indexWhere(
+    (item) => item.variantId == newItem.variantId,
+  );
+
+  if (index != -1) {
+    _items[index] = _items[index].copyWith(
+      quantity: _items[index].quantity + newItem.quantity,
     );
-
-    if (index != -1) {
-      // update quantity
-      final updated = _items[index].copyWith(
-        quantity: _items[index].quantity + newItem.quantity,
-      );
-
-      _items[index] = updated;
-    } else {
-      _items.add(newItem);
-    }
-
-    notifyListeners();
+  } else {
+    _items.add(newItem);
   }
 
-  // ================= REMOVE =================
-  void removeItem(CartItem item) {
-    _items.removeWhere(
-      (e) =>
-          e.productId == item.productId &&
-          e.color == item.color &&
-          e.size == item.size,
-    );
+  notifyListeners();
+}
 
-    notifyListeners();
-  }
+  /// ❌ REMOVE
+ void removeItem(CartItem item) {
+  _items.removeWhere(
+    (e) => e.variantId == item.variantId,
+  );
 
-  // ================= UPDATE QTY =================
+  notifyListeners();
+}
+
+  /// ➕ INCREASE
   void increaseQty(CartItem item) {
-    final index = _items.indexOf(item);
+    final index = _items.indexWhere(
+      (e) => e.variantId == item.variantId,
+    );
+
     if (index != -1) {
-      _items[index] = _items[index].copyWith(quantity: item.quantity + 1);
+      _items[index] = _items[index].copyWith(
+        quantity: item.quantity + 1,
+      );
       notifyListeners();
     }
   }
 
+  /// ➖ DECREASE
   void decreaseQty(CartItem item) {
-    final index = _items.indexOf(item);
+    final index = _items.indexWhere(
+      (e) => e.variantId == item.variantId,
+    );
 
     if (index != -1) {
       if (item.quantity > 1) {
-        _items[index] = _items[index].copyWith(quantity: item.quantity - 1);
+        _items[index] = _items[index].copyWith(
+          quantity: item.quantity - 1,
+        );
       } else {
         _items.removeAt(index);
       }
@@ -63,18 +64,18 @@ class CartProvider extends ChangeNotifier {
     }
   }
 
-  // ================= CLEAR =================
+  /// 🧹 CLEAR
   void clearCart() {
     _items.clear();
     notifyListeners();
   }
 
-  // ================= TOTAL =================
+  /// 💰 SUBTOTAL
   double get subtotal {
     return _items.fold(0, (sum, item) => sum + item.total);
   }
 
-  double get shipping => 0; // sau này tính API
+  double get shipping => 0;
 
   double get discount => 0;
 
@@ -82,18 +83,14 @@ class CartProvider extends ChangeNotifier {
     return subtotal + shipping - discount;
   }
 
-  // ================= COUNT =================
   int get totalItems {
     return _items.fold(0, (sum, item) => sum + item.quantity);
   }
 
-  // ================= CHECK =================
+  /// ✅ CHECK EXIST
   bool isInCart(CartItem item) {
-    return _items.any(
-      (e) =>
-          e.productId == item.productId &&
-          e.color == item.color &&
-          e.size == item.size,
-    );
-  }
+  return _items.any(
+    (e) => e.variantId == item.variantId,
+  );
+}
 }

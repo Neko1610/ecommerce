@@ -6,6 +6,7 @@ import '../widgets/cart/cart_header.dart';
 import '../widgets/cart/cart_summary.dart';
 import '../widgets/cart/voucher_input.dart';
 import '../widgets/cart/cart_bottom_bar.dart';
+import '../models/cart_item.dart';
 
 class CartScreen extends StatefulWidget {
   @override
@@ -14,18 +15,15 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   final CartService _service = CartService();
+
   double discountPercent = 0;
   String appliedCode = "";
-  List items = [];
+
+  List<CartItem> items = [];
   bool isLoading = true;
+
   double getSubtotal() {
-    double total = 0;
-
-    for (var item in items) {
-      total += item['variant']['price'] * item['quantity'];
-    }
-
-    return total;
+    return items.fold(0, (sum, e) => sum + e.price * e.quantity);
   }
 
   double getTotal() {
@@ -41,99 +39,129 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> loadCart() async {
-    final data = await _service.getCart();
+    try {
+      final data = await _service.getCart();
 
-    setState(() {
-      items = data;
-      isLoading = false;
-    });
+      setState(() {
+        items = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
   }
 
+  // 🔥 APPLY VOUCHER
   void applyVoucher(String code) async {
     try {
       final subtotal = getSubtotal();
-
-      final res = await CartService().applyVoucher(code, subtotal);
+      final res = await _service.applyVoucher(code, subtotal);
 
       setState(() {
         discountPercent = res['discountPercent'];
         appliedCode = code;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Applied $code")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Applied $code")));
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Voucher lỗi")));
     }
   }
+
+  // 🔥 UPDATE QUANTITY
+  Future<void> updateQty(CartItem item, int newQty) async {
+    try {
+      await _service.updateQuantity(item.variantId, newQty);
+
+      setState(() {
+        final index = items.indexOf(item);
+        items[index] = item.copyWith(quantity: newQty);
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  // 🔥 DELETE ITEM
+Future<void> deleteItem(CartItem item) async {
+  try {
+    await _service.deleteItem(item.id);
+
+    setState(() {
+      items.removeWhere((i) => i.id == item.id);
+    });
+  } catch (e) {
+    print(e);
+  }
+}
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
-      backgroundColor: Color(0xfff6f7f8),
+      backgroundColor: const Color(0xfff6f7f8),
+
       bottomNavigationBar: CartBottomBar(
         total: getTotal(),
-        onCheckout: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CheckoutScreen(
-                cart: items,
-                totalPrice: getTotal(),
-                voucherCode: appliedCode,
-              ),
-            ),
-          ).then((_) {
-            setState(() {});
-          });
-        },
+
+        // 🔥 CHECKOUT
+        onCheckout: items.isEmpty
+            ? null
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CheckoutScreen(
+                      cart: items,
+                      totalPrice: getTotal(),
+                      voucherCode: appliedCode,
+                    ),
+                  ),
+                ).then((_) => loadCart());
+              },
       ),
 
       body: Center(
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 420),
+          constraints: const BoxConstraints(maxWidth: 420),
           child: Column(
             children: [
               CartHeader(),
 
               Expanded(
-                child: ListView(
-                  padding: EdgeInsets.all(16),
-                  children: [
-                    ...items.map(
-                      (e) => CartItemWidget(
-                        item: e,
+                child: items.isEmpty
+                    ? const Center(child: Text("Giỏ hàng trống 🛒"))
+                    : ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          ...items.map((e) => CartItemWidget(
+                                item: e,
+                                onUpdate: (newQty) =>
+                                    updateQty(e, newQty),
+                                onDelete: () => deleteItem(e),
+                              )),
 
-                        // 🔥 update local quantity
-                        onUpdate: (newQty) {
-                          setState(() {
-                            e['quantity'] = newQty;
-                          });
-                        },
+                          const SizedBox(height: 20),
 
-                        // ❌ delete local
-                        onDelete: () {
-                          setState(() {
-                            items.remove(e);
-                          });
-                        },
+                          VoucherInput(onApply: applyVoucher),
+
+                          const SizedBox(height: 20),
+
+                          CartSummary(
+                            items: items,
+                            discountPercent: discountPercent,
+                          ),
+
+                          const SizedBox(height: 100),
+                        ],
                       ),
-                    ),
-
-                    SizedBox(height: 20),
-                    VoucherInput(onApply: applyVoucher),
-                    SizedBox(height: 20),
-                    CartSummary(items: items, discountPercent: discountPercent),
-                    SizedBox(height: 100),
-                  ],
-                ),
               ),
             ],
           ),

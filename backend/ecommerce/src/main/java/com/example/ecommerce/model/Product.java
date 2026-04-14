@@ -12,7 +12,12 @@ public class Product {
     private Long id;
 
     private String name;
+    @Column(columnDefinition = "TEXT")
     private String description;
-    private Double price;
-    private Double oldPrice;
+    @Column(columnDefinition = "TEXT")
+    private String image;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 }

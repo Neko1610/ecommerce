@@ -1,7 +1,11 @@
 package com.example.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -19,10 +23,23 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    private String password;
+
     private String fullName;
 
-    private String avatar;
+    private String userName;
 
+    private String phone;
+
+    private String avatar;
+    
+    private String role;
+    
     @Column(name = "created_at")
     private Long createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = System.currentTimeMillis();
+    }
 }

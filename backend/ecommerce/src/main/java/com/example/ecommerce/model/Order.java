@@ -15,19 +15,26 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private Long userId;
+    
     private String address;
     private String phone;
     private String paymentMethod;
+
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<OrderItem> items;
+
     private Double subtotal;
     private Double discount;
     private Double total;
 
-    private String status; // PENDING
+    private Double shippingFee;
+    private Double distance;
+    private Integer etaDays;
+
+    private String status;
 
     private LocalDateTime createdAt = LocalDateTime.now();
-    
 }

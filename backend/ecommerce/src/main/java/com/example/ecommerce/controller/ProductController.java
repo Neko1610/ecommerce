@@ -2,8 +2,10 @@ package com.example.ecommerce.controller;
 
 import com.example.ecommerce.dto.ProductDetailResponse;
 import com.example.ecommerce.dto.VariantResponse;
+import com.example.ecommerce.model.Category;
 import com.example.ecommerce.model.Product;
 import com.example.ecommerce.model.ProductVariant;
+import com.example.ecommerce.repository.CategoryRepository;
 import com.example.ecommerce.repository.ProductImageRepository;
 import com.example.ecommerce.repository.ProductRepository;
 import com.example.ecommerce.repository.ProductVariantRepository;
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
@@ -27,123 +30,215 @@ public class ProductController {
     @Autowired
     private ProductImageRepository imageRepo;
 
-@GetMapping
-public List<ProductDetailResponse> getAll() {
-    List<Product> products = productRepo.findAll();
+    @Autowired
+    private CategoryRepository categoryRepo;
 
-    return products.stream().map(p -> {
+    // =========================
+    // GET ALL / FILTER / SEARCH
+    // =========================
+    @GetMapping
+    public List<ProductDetailResponse> getAll(
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String keyword) {
 
-        List<ProductVariant> variants = variantRepo.findByProductId(p.getId());
+        List<Product> products;
 
-        String image = "";
+        if (categoryId != null) {
 
-        if (!variants.isEmpty()) {
-            List<String> images = imageRepo.findByVariantId(variants.get(0).getId())
-                    .stream()
-                    .map(img -> img.getImageUrl())
-                    .toList();
+            Category category = categoryRepo.findById(categoryId)
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
 
-            if (!images.isEmpty()) {
-                image = images.get(0);
+            if (category.getParent() == null) {
+
+                List<Long> subIds = categoryRepo.findByParentId(categoryId)
+                        .stream()
+                        .map(Category::getId)
+                        .collect(Collectors.toList());
+
+                products = productRepo.findByCategoryIdIn(subIds);
+
+            } else {
+                products = productRepo.findByCategoryId(categoryId);
             }
+
+        } else {
+            products = productRepo.findAll();
         }
 
-        ProductDetailResponse res = new ProductDetailResponse();
-        res.setId(p.getId());
-        res.setName(p.getName());
-        res.setDescription(p.getDescription());
+        // ðŸ” SEARCH
+        if (keyword != null && !keyword.isEmpty()) {
+            String lower = keyword.toLowerCase();
 
-        res.setPrice(p.getPrice() != null ? p.getPrice() : 0);
-        res.setOldPrice(p.getOldPrice());
-        res.setImage(image);
+            products = products.stream()
+                    .filter(p -> p.getName().toLowerCase().contains(lower))
+                    .collect(Collectors.toList());
+        }
 
-        // 🔥 THÊM ĐOẠN NÀY
-        List<VariantResponse> variantResponses = variants.stream().map(v -> {
-
-            VariantResponse vr = new VariantResponse();
-            vr.setId(v.getId());
-            vr.setSize(v.getSize());
-            vr.setColor(v.getColor());
-            vr.setPrice(v.getPrice());
-            vr.setStock(v.getStock());
-
-            List<String> images = imageRepo.findByVariantId(v.getId())
-                    .stream()
-                    .map(img -> img.getImageUrl())
-                    .toList();
-
-            vr.setImages(images);
-
-            return vr;
-
-        }).toList();
-
-        res.setVariants(variantResponses); // 🔥 QUAN TRỌNG
-
-        return res;
-
-    }).toList();
-}
-
-    @PostMapping
-    public Product create(@RequestBody Product p) {
-        return productRepo.save(p);
+        return products.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
-    @GetMapping("/{id}/variants")
-    public List<ProductVariant> getVariants(@PathVariable Long id) {
-        return variantRepo.findByProductId(id);
-    }
-
-    @PostMapping("/variant")
-    public ProductVariant addVariant(@RequestBody ProductVariant v) {
-        return variantRepo.save(v);
-    }
-
+    // =========================
+    // GET DETAIL
+    // =========================
     @GetMapping("/{id}")
     public ProductDetailResponse getDetail(@PathVariable Long id) {
 
         Product product = productRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        List<ProductVariant> variants = variantRepo.findByProductId(id);
+        return mapToResponse(product);
+    }
 
+    // =========================
+    // CREATE PRODUCT
+    // =========================
+    @PostMapping
+    public ProductDetailResponse create(@RequestBody Product product) {
+
+        if (product.getCategory() == null) {
+            throw new RuntimeException("Category is required");
+        }
+
+        Category category = categoryRepo.findById(product.getCategory().getId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        // âŒ khÃ´ng cho chá»n category cha
+        if (category.getParent() == null) {
+            throw new RuntimeException("Pháº£i chá»n subcategory");
+        }
+
+        product.setCategory(category);
+
+        Product savedProduct = productRepo.save(product);
+        return mapToResponse(savedProduct);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteProduct(@PathVariable Long id) {
+        if (!productRepo.existsById(id)) {
+            throw new RuntimeException("Product not found");
+        }
+        productRepo.deleteById(id);
+    }
+
+    // =========================
+    // GET VARIANTS
+    // =========================
+    @GetMapping("/{id}/variants")
+    public List<VariantResponse> getVariants(@PathVariable Long id) {
+        return variantRepo.findByProductId(id).stream()
+                .map(this::mapVariantResponse)
+                .collect(Collectors.toList());
+    }
+
+    @PostMapping("/{id}/variants")
+    public VariantResponse addVariantForProduct(@PathVariable Long id, @RequestBody ProductVariant variant) {
+        Product product = productRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        variant.setProduct(product);
+        ProductVariant savedVariant = variantRepo.save(variant);
+        return mapVariantResponse(savedVariant);
+    }
+
+    // =========================
+    // ADD VARIANT
+    // =========================
+    @PostMapping("/variant")
+    public VariantResponse addVariant(@RequestBody ProductVariant v) {
+        if (v.getProduct() == null || v.getProduct().getId() == null) {
+            throw new RuntimeException("Product is required");
+        }
+
+        Product product = productRepo.findById(v.getProduct().getId())
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        v.setProduct(product);
+        ProductVariant savedVariant = variantRepo.save(v);
+        return mapVariantResponse(savedVariant);
+    }
+
+    // =========================
+    // MAP RESPONSE (QUAN TRá»ŒNG)
+    // =========================
+    private ProductDetailResponse mapToResponse(Product p) {
+
+        List<ProductVariant> variants = variantRepo.findByProductId(p.getId());
+
+        // ðŸ–¼ IMAGE (láº¥y tá»« variant Ä‘áº§u)
+        String image = "";
+        if (!variants.isEmpty()) {
+            image = resolveVariantImage(variants.get(0));
+        }
+
+        // ðŸ’° PRICE RANGE (SAFE)
+        double minPrice = variants.stream()
+                .mapToDouble(ProductVariant::getPrice)
+                .min()
+                .orElse(0);
+
+        double maxPrice = variants.stream()
+                .mapToDouble(ProductVariant::getPrice)
+                .max()
+                .orElse(0);
+
+        List<VariantResponse> variantResponses = variants.stream()
+                .map(this::mapVariantResponse)
+                .collect(Collectors.toList());
+
+        // ðŸ“¦ RESPONSE
         ProductDetailResponse res = new ProductDetailResponse();
-        res.setId(product.getId());
-        res.setName(product.getName());
-        res.setDescription(product.getDescription());
-
-        /// 💰 PRICE
-        res.setPrice(
-            product.getPrice() != null ? product.getPrice() : 0
-        );
-
-        res.setOldPrice(product.getOldPrice());
-
-        /// 🔁 VARIANTS
-        List<VariantResponse> variantResponses = variants.stream().map(v -> {
-
-            VariantResponse vr = new VariantResponse();
-            vr.setId(v.getId());
-            vr.setSize(v.getSize());
-            vr.setColor(v.getColor());
-            vr.setPrice(v.getPrice());
-            vr.setStock(v.getStock());
-
-            /// 🖼 IMAGES
-            List<String> images = imageRepo.findByVariantId(v.getId())
-                    .stream()
-                    .map(img -> img.getImageUrl())
-                    .toList();
-
-            vr.setImages(images);
-
-            return vr;
-
-        }).toList();
-
+        res.setId(p.getId());
+        res.setName(p.getName());
+        res.setDescription(p.getDescription());
+        res.setMinPrice(minPrice);
+        res.setMaxPrice(maxPrice);
+        res.setImage(image);
         res.setVariants(variantResponses);
 
         return res;
+    }
+
+    private String resolveVariantImage(ProductVariant variant) {
+        if (variant.getImage() != null && !variant.getImage().isBlank()) {
+            return variant.getImage();
+        }
+
+        return imageRepo.findByVariantId(variant.getId())
+                .stream()
+                .map(img -> img.getImageUrl())
+                .findFirst()
+                .orElse("");
+    }
+
+    private VariantResponse mapVariantResponse(ProductVariant v) {
+        VariantResponse vr = new VariantResponse();
+        vr.setId(v.getId());
+        vr.setSize(v.getSize());
+        vr.setColor(v.getColor());
+        vr.setPrice(v.getPrice());
+
+        // ðŸ”¥ SAFE
+        Double oldPrice = v.getOldPrice();
+        vr.setOldPrice(oldPrice);
+
+        // â— KHÃ”NG BAO GIá»œ lÃ m:
+        // if (v.getOldPrice() > ...)
+        if (oldPrice != null && oldPrice > v.getPrice()) {
+            // náº¿u cáº§n logic discount
+        }
+
+        vr.setStock(v.getStock());
+        vr.setImage(resolveVariantImage(v));
+
+        List<String> images = imageRepo.findByVariantId(v.getId())
+                .stream()
+                .map(img -> img.getImageUrl())
+                .collect(Collectors.toList());
+
+        vr.setImages(images);
+
+        return vr;
     }
 }

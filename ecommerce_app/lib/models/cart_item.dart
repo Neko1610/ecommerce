@@ -1,19 +1,27 @@
 class CartItem {
-  final int productId;
-  final String name;
-  final String image;
-  final double price;
+  final int id;
+  final int variantId;
+
+  final String productName;
+  final String productImage;
+
   final String color;
   final String size;
+
+  final double price;
+  final int stock;
+
   final int quantity;
 
   CartItem({
-    required this.productId,
-    required this.name,
-    required this.image,
-    required this.price,
+    required this.id,
+    required this.variantId,
+    required this.productName,
+    required this.productImage,
     required this.color,
     required this.size,
+    required this.price,
+    required this.stock,
     this.quantity = 1,
   });
 
@@ -21,23 +29,33 @@ class CartItem {
 
   CartItem copyWith({int? quantity}) {
     return CartItem(
-      productId: productId,
-      name: name,
-      image: image,
-      price: price,
+      id: id,
+      variantId: variantId,
+      productName: productName,
+      productImage: productImage,
       color: color,
       size: size,
+      price: price,
+      stock: stock,
       quantity: quantity ?? this.quantity,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    "productId": productId,
-    "name": name,
-    "image": image,
-    "price": price,
-    "color": color,
-    "size": size,
+    "variantId": variantId,
     "quantity": quantity,
   };
+  factory CartItem.fromJson(Map<String, dynamic> json) {
+  return CartItem(
+    id: json['id'],
+    variantId: json['variantId'],
+    productName: json['productName'],
+    productImage: json['productImage'],
+    color: json['color'],
+    size: json['size'],
+    price: (json['price']).toDouble(),
+    stock: json['stock'],
+    quantity: json['quantity'],
+  );
+}
 }

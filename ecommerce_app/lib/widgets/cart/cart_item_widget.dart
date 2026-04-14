@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../services/cart_service.dart';
+import '../../models/cart_item.dart';
+
 import 'quantity_selector.dart';
 
 class CartItemWidget extends StatelessWidget {
-  final dynamic item;
   final Function(int) onUpdate;
   final VoidCallback onDelete;
+  final CartItem item;
 
   const CartItemWidget({
     super.key,
@@ -16,14 +18,15 @@ class CartItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final variant = item['variant'] ?? {};
-    final product = variant['product'] ?? {};
+    final cartId = item.variantId;
+    final qty = item.quantity;
 
-    final cartId = item['id'];
-    final qty = item['quantity'];
-    final image = variant['images'] != null && variant['images'].isNotEmpty
-        ? variant['images'][0]
-        : "https://picsum.photos/80";
+    final name = item.productName;
+    final image = item.productImage;
+    final price = item.price;
+    final color = item.color;
+    final size = item.size;
+
     return Container(
       margin: EdgeInsets.only(bottom: 16),
       padding: EdgeInsets.only(bottom: 12),
@@ -34,7 +37,7 @@ class CartItemWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              // 🖼 IMAGE
+              /// 🖼 IMAGE
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.network(
@@ -48,23 +51,24 @@ class CartItemWidget extends StatelessWidget {
 
               SizedBox(width: 12),
 
-              // 📄 INFO
+              /// 📄 INFO
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      product['name'],
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
+                    Text(name, style: TextStyle(fontWeight: FontWeight.w600)),
+
                     SizedBox(height: 4),
+
                     Text(
-                      "${variant['size']} • ${variant['color']}",
+                      "$size • $color",
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
+
                     SizedBox(height: 6),
+
                     Text(
-                      "\$${variant['price']}",
+                      "\$${price.toStringAsFixed(0)}",
                       style: TextStyle(
                         color: Color(0xff137fec),
                         fontWeight: FontWeight.bold,
@@ -74,41 +78,31 @@ class CartItemWidget extends StatelessWidget {
                 ),
               ),
 
-              // ➕➖
+              /// ➕➖
               QuantitySelector(
                 quantity: qty,
-
                 onIncrease: () async {
                   final newQty = qty + 1;
-
-                  // ✅ update UI trước (mượt)
                   onUpdate(newQty);
-
-                  // ✅ call API sau
                   await CartService().updateQuantity(cartId, newQty);
                 },
-
                 onDecrease: () async {
                   if (qty <= 1) return;
-
                   final newQty = qty - 1;
-
                   onUpdate(newQty);
-
                   await CartService().updateQuantity(cartId, newQty);
                 },
               ),
             ],
           ),
 
-          // ❌ DELETE
+          /// ❌ DELETE
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
               onPressed: () async {
                 await CartService().deleteItem(cartId);
-
-                onDelete(); // remove local
+                onDelete();
               },
               icon: Icon(Icons.delete, color: Colors.red),
               label: Text("Remove", style: TextStyle(color: Colors.red)),

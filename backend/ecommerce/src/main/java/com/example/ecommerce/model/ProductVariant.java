@@ -21,6 +21,9 @@ public class ProductVariant {
 
     private int stock;
     private double price;
+    private Double oldPrice;
+    @Column(columnDefinition = "TEXT")
+    private String image;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")

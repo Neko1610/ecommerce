@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class CheckoutBottomBar extends StatelessWidget {
   final double total;
-  final VoidCallback onCheckout;
+  final VoidCallback? onCheckout;
 
   const CheckoutBottomBar({
     super.key,
@@ -32,7 +32,7 @@ class CheckoutBottomBar extends StatelessWidget {
                       style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     Text(
-                      "${total.toStringAsFixed(0)}đ",
+                      "\$${total.toStringAsFixed(0)}",
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,

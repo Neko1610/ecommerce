@@ -2,7 +2,18 @@ package com.example.ecommerce.repository;
 
 import com.example.ecommerce.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.Optional;
+
+import java.util.List;
+
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    Optional<Product> findById(Long id);
+
+    List<Product> findByCategoryId(Long categoryId);
+    List<Product> findByNameContainingIgnoreCase(String keyword);
+     List<Product> findByNameContainingIgnoreCaseAndCategoryId(
+            String keyword,
+            Long categoryId
+    );
+
+    List<Product> findByCategoryIdIn(List<Long> categoryIds);
+    
 }

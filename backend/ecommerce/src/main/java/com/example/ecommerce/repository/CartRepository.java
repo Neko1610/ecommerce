@@ -9,9 +9,7 @@ import java.util.Optional;
 
 public interface CartRepository extends JpaRepository<CartItem, Long> {
 
-    Optional<CartItem> findByUserIdAndVariant(Long userId, ProductVariant variant);
-
-    List<CartItem> findByUserId(Long userId);
-
-    void deleteByUserId(Long userId); // 🔥 thêm vào đây
+   Optional<CartItem> findByUserIdAndVariant(Long userId, ProductVariant variant); 
+   List<CartItem> findByUserId(Long userId); 
+   void deleteByUserId(Long userId);
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:ecommerce_app/models/cart_item.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,8 +11,7 @@ class CartService {
     return prefs.getString("token") ?? "";
   }
 
-  // 🛒 GET CART
-  Future<List<dynamic>> getCart() async {
+  Future<List<CartItem>> getCart() async {
     final token = await getToken();
 
     final res = await http.get(
@@ -19,10 +19,12 @@ class CartService {
       headers: {"Authorization": "Bearer $token"},
     );
 
-    return jsonDecode(res.body);
-  }
+    final data = jsonDecode(res.body);
 
-  // 🔄 UPDATE QTY
+    return (data as List).map((e) => CartItem.fromJson(e)).toList();
+  }
+  
+
   Future<void> updateQuantity(int id, int qty) async {
     final token = await getToken();
 
@@ -32,7 +34,6 @@ class CartService {
     );
   }
 
-  // ❌ DELETE ITEM
   Future<void> deleteItem(int id) async {
     final token = await getToken();
 
@@ -42,7 +43,7 @@ class CartService {
     );
   }
 
-  // 🧹 CLEAR CART
+
   Future<void> clearCart() async {
     final token = await getToken();
 
@@ -52,7 +53,6 @@ class CartService {
     );
   }
 
-  // 🎟 APPLY VOUCHER
   Future<Map<String, dynamic>> applyVoucher(
     String code,
     double subtotal,
@@ -69,4 +69,25 @@ class CartService {
 
     return jsonDecode(res.body);
   }
+
+  Future<void> addToCart({
+    required int variantId,
+    required int quantity,
+  }) async {
+    final token = await getToken();
+
+    final res = await http.post(
+      Uri.parse("$baseUrl/add"),
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({"variantId": variantId, "quantity": quantity}),
+    );
+
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw Exception("Add to cart failed: ${res.body}");
+    }
+  }
+  
 }

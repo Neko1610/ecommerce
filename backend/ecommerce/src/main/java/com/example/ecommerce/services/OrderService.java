@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import com.example.ecommerce.dto.OrderRequest;
 import com.example.ecommerce.dto.OrderItemRequest;
 import com.example.ecommerce.dto.OrderListResponse;
+import com.example.ecommerce.model.Address;
 import com.example.ecommerce.model.Order;
 import com.example.ecommerce.model.OrderItem;
 import com.example.ecommerce.model.ProductVariant;
@@ -23,6 +25,7 @@ import com.example.ecommerce.repository.ProductVariantRepository;
 import com.example.ecommerce.repository.UserRepository;
 import com.example.ecommerce.repository.OrderItemRepository;
 import com.example.ecommerce.repository.VoucherRepository;
+import com.example.ecommerce.repository.AddressRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -30,12 +33,21 @@ import jakarta.transaction.Transactional;
 @RequiredArgsConstructor
 public class OrderService {
 
+    private static final Set<String> ALLOWED_STATUSES = Set.of(
+            "PENDING",
+            "CONFIRMED",
+            "SHIPPED",
+            "DELIVERED",
+            "CANCELLED");
+
     private final OrderRepository orderRepo;
     private final OrderItemRepository orderItemRepo;
     private final VoucherRepository voucherRepo;
     private final ProductVariantRepository variantRepo;
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
+    private final AddressRepository addressRepository;
+    private final ShippingService shippingService;
 
     // 🔥 CHECKOUT (JWT)
     @Transactional
@@ -73,17 +85,47 @@ public class OrderService {
                     .orElseThrow(() -> new RuntimeException("Voucher not found"));
 
             discount = subtotal * v.getDiscountPercent() / 100;
+
         }
 
-        double total = subtotal - discount + request.getShippingFee();
+        // 🔥 LẤY ADDRESS
+        Address address = addressRepository
+                .findByIdAndEmail(request.getAddressId(), email)
+                .orElseThrow(() -> new RuntimeException("Address not found"));
+        if (address.getLatitude() == null || address.getLongitude() == null) {
+            throw new RuntimeException("Address chưa có tọa độ");
+        }
+        // 🔥 TÍNH SHIPPING
+        double[] warehouse = shippingService.getNearestWarehouse(
+                address.getLatitude(),
+                address.getLongitude());
 
+        double distance = shippingService.calculateDistance(
+                warehouse[0], warehouse[1],
+                address.getLatitude(), address.getLongitude());
+
+        double fee = shippingService.calculateFee(distance);
+        int eta = shippingService.calculateETA(distance);
+
+        // 🔥 TOTAL
+        double total = subtotal - discount + fee;
+
+        // 🔥 CREATE ORDER
         Order order = new Order();
         order.setUserId(user.getId());
-        order.setAddress(request.getAddress());
+
+        order.setAddress(address.getFullAddress()); // snapshot
         order.setPhone(request.getPhone());
         order.setPaymentMethod(request.getPaymentMethod());
+
         order.setSubtotal(subtotal);
         order.setDiscount(discount);
+
+        // 🔥 SHIPPING SAVE
+        order.setShippingFee(fee);
+        order.setDistance(distance);
+        order.setEtaDays(eta);
+
         order.setTotal(total);
         order.setStatus("PENDING");
 
@@ -93,8 +135,6 @@ public class OrderService {
             oi.setOrder(order);
             orderItemRepo.save(oi);
         }
-
-        // 🔥 CLEAR CART SAU CHECKOUT
         cartRepository.deleteByUserId(user.getId());
     }
 
@@ -106,43 +146,15 @@ public class OrderService {
 
         return orderRepo.findByUserIdOrderByIdDesc(user.getId())
                 .stream()
-                .map(order -> {
+                .map(this::mapOrderSummary)
+                .toList();
+    }
 
-                    OrderListResponse res = new OrderListResponse();
-
-                    res.setId(order.getId());
-                    res.setStatus(order.getStatus());
-                    res.setTotal(order.getTotal());
-
-                    res.setCreatedAt(
-                            order.getCreatedAt()
-                                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-                    );
-
-                    // 🔥 images
-                    List<String> images = orderItemRepo
-                            .findByOrder_Id(order.getId())
-                            .stream()
-                            .limit(3)
-                            .map(item -> {
-                                ProductVariant variant = variantRepo.findById(item.getVariantId()).orElse(null);
-
-                                if (variant != null &&
-                                        variant.getImages() != null &&
-                                        !variant.getImages().isEmpty()) {
-                                    return variant.getImages().get(0).getImageUrl();
-                                }
-
-                                return "https://picsum.photos/200";
-                            })
-                            .toList();
-
-                    res.setImages(images);
-                    res.setTitle("Order #" + order.getId());
-
-                    return res;
-
-                }).toList();
+    public List<OrderListResponse> getAllOrdersForAdmin() {
+        return orderRepo.findAllByOrderByIdDesc()
+                .stream()
+                .map(this::mapOrderSummary)
+                .toList();
     }
 
     // 🔥 ORDER DETAIL (SECURE)
@@ -158,7 +170,58 @@ public class OrderService {
             throw new RuntimeException("Access denied");
         }
 
-        List<OrderItem> items = orderItemRepo.findByOrder_Id(id);
+        return buildOrderDetail(order);
+    }
+
+    public Map<String, Object> getDetailForAdmin(Long id) {
+        Order order = orderRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        return buildOrderDetail(order);
+    }
+
+    @Transactional
+    public Order updateOrderStatus(Long id, String status) {
+        Order order = orderRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        String normalizedStatus = normalizeStatus(status);
+        order.setStatus(normalizedStatus);
+
+        return orderRepo.save(order);
+    }
+
+    private String normalizeStatus(String status) {
+        String normalized = status == null ? "" : status.trim().toUpperCase();
+        if (!ALLOWED_STATUSES.contains(normalized)) {
+            throw new RuntimeException("Invalid order status");
+        }
+        return normalized;
+    }
+
+    private OrderListResponse mapOrderSummary(Order order) {
+        OrderListResponse res = new OrderListResponse();
+
+        res.setId(order.getId());
+        res.setStatus(order.getStatus());
+        res.setTotal(order.getTotal());
+        res.setCreatedAt(
+                order.getCreatedAt()
+                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+
+        List<String> images = orderItemRepo.findByOrder_Id(order.getId())
+                .stream()
+                .limit(3)
+                .map(item -> resolveVariantImage(variantRepo.findById(item.getVariantId()).orElse(null)))
+                .toList();
+
+        res.setImages(images);
+        res.setTitle("Order #" + order.getId());
+        return res;
+    }
+
+    private Map<String, Object> buildOrderDetail(Order order) {
+        List<OrderItem> items = orderItemRepo.findByOrder_Id(order.getId());
 
         List<Map<String, Object>> itemList = items.stream().map(item -> {
 
@@ -167,18 +230,12 @@ public class OrderService {
             ProductVariant variant = variantRepo.findById(item.getVariantId()).orElse(null);
 
             String productName = variant != null ? variant.getProduct().getName() : "";
-            String image = "https://picsum.photos/80";
-
-            if (variant != null && variant.getImages() != null && !variant.getImages().isEmpty()) {
-                image = variant.getImages().get(0).getImageUrl();
-            }
-
             String variantText = variant != null
                     ? variant.getColor() + " / " + variant.getSize()
                     : "";
 
             map.put("productName", productName);
-            map.put("image", image);
+            map.put("image", resolveVariantImage(variant));
             map.put("quantity", item.getQuantity());
             map.put("price", item.getPrice());
             map.put("variant", variantText);
@@ -192,5 +249,21 @@ public class OrderService {
         res.put("items", itemList);
 
         return res;
+    }
+
+    private String resolveVariantImage(ProductVariant variant) {
+        if (variant == null) {
+            return "https://picsum.photos/200";
+        }
+
+        if (variant.getImage() != null && !variant.getImage().isBlank()) {
+            return variant.getImage();
+        }
+
+        if (variant.getImages() != null && !variant.getImages().isEmpty()) {
+            return variant.getImages().get(0).getImageUrl();
+        }
+
+        return "https://picsum.photos/200";
     }
 }

@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import '../../models/cart_item.dart'; // 🔥 thêm dòng này
 
 class CartSummary extends StatelessWidget {
-  final List items;
+  final List<CartItem> items; // 🔥 FIX
   final double discountPercent;
 
-  const CartSummary({required this.items, required this.discountPercent});
+  const CartSummary({
+    super.key,
+    required this.items,
+    required this.discountPercent,
+  });
 
   double getSubtotal() {
     double total = 0;
+
     for (var item in items) {
-      total += item['variant']['price'] * item['quantity'];
+      total += item.price * item.quantity; // 🔥 FIX
     }
+
     return total;
   }
 

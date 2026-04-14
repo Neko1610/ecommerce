@@ -10,6 +10,6 @@ public class OrderRequest {
     private String paymentMethod;
     private String voucherCode;
     private List<OrderItemRequest> items;
-    private double shippingFee;
+    private Long addressId;
     
 }

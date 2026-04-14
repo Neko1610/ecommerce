@@ -17,7 +17,7 @@ public class CorsConfig {
 
                 registry.addMapping("/api/**") // chỉ áp dụng API
                         .allowedOrigins("*")   // cho phép tất cả (dev)
-                        .allowedMethods("GET", "POST", "PUT", "DELETE")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE","OPTIONS")
                         .allowedHeaders("*");
             }
         };

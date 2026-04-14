@@ -57,7 +57,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
-  // ================= VARIANT =================
   Variant? getSelectedVariant() {
     try {
       return product!.variants.firstWhere(
@@ -68,7 +67,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
-  // ================= IMAGE SAFE =================
   String getCurrentImage() {
     final variant = getSelectedVariant();
 
@@ -79,7 +77,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return "https://via.placeholder.com/300";
   }
 
-  // ================= SIZE FILTER =================
   List<String> getAvailableSizes() {
     return product!.variants
         .where((v) => v.color == selectedColor)
@@ -88,7 +85,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         .toList();
   }
 
-  // ================= API ADD CART =================
   Future<void> addToCartApi(int variantId) async {
     final token = await getToken();
 
@@ -108,7 +104,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
-  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -121,8 +116,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xfff6f7f8),
-
-      // 🔝 APP BAR
       appBar: AppBar(
         title: const Text("Product Details"),
         centerTitle: true,
@@ -132,7 +125,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
       ),
 
-      // 📦 BODY
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,7 +133,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
             ProductInfo(product: product!, variant: getSelectedVariant()),
 
-            // 🎨 COLOR
             if (product!.colors.isNotEmpty)
               ColorSelector(
                 colors: product!.colors,
@@ -158,7 +149,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 },
               ),
 
-            // 🔢 SIZE
             if (product!.sizes.isNotEmpty)
               SizeSelector(
                 sizes: product!.sizes,
@@ -174,7 +164,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
       ),
 
-      // 🛒 BOTTOM
       bottomNavigationBar: BottomActionBar(
         onAddToCart: () async {
           if (selectedColor.isEmpty || selectedSize.isEmpty) {

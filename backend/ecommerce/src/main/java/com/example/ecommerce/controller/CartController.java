@@ -15,86 +15,85 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/cart")
 public class CartController {
-
     @Autowired
     private CartService cartService;
     @Autowired
     private ProductImageRepository imageRepo;
 
     // 🛒 ADD
-   @PostMapping("/add")
+    @PostMapping("/add")
     public String addToCart(@RequestBody CartRequest request) {
 
         String email = SecurityContextHolder
                 .getContext()
                 .getAuthentication()
                 .getName();
-                
-  System.out.println("EMAIL FROM TOKEN: " + email);
+
+        System.out.println("EMAIL FROM TOKEN: " + email);
 
         cartService.addToCartByEmail(
                 email,
                 request.getVariantId(),
-                request.getQuantity()
-        );
+                request.getQuantity());
 
         return "Added";
     }
 
     // 📦 GET CART
-@GetMapping
-public List<CartItemResponse> getCart() {
+    @GetMapping
+    public List<CartItemResponse> getCart() {
 
-    // 🔥 lấy user từ token
-    String email = SecurityContextHolder
-            .getContext()
-            .getAuthentication()
-            .getName();
+        // 🔥 lấy user từ token
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
 
-    List<CartItem> items = cartService.getCartByEmail(email);
+        List<CartItem> items = cartService.getCartByEmail(email);
 
-    return items.stream().map(item -> {
+        return items.stream().map(item -> {
 
-        var v = item.getVariant();
+            var v = item.getVariant();
 
-        VariantResponse vr = new VariantResponse();
-        vr.setId(v.getId());
-        vr.setSize(v.getSize());
-        vr.setColor(v.getColor());
-        vr.setPrice(v.getPrice());
-        vr.setStock(v.getStock());
+            VariantResponse vr = new VariantResponse();
+            vr.setId(v.getId());
+            vr.setSize(v.getSize());
+            vr.setColor(v.getColor());
+            vr.setPrice(v.getPrice());
+            vr.setStock(v.getStock());
 
-        List<String> images = imageRepo.findByVariantId(v.getId())
-                .stream()
-                .map(img -> img.getImageUrl())
-                .toList();
+            List<String> images = imageRepo.findByVariantId(v.getId())
+                    .stream()
+                    .map(img -> img.getImageUrl())
+                    .toList();
 
-        vr.setImages(images);
+            vr.setImages(images);
 
-        var p = v.getProduct();
+            var p = v.getProduct();
 
-        ProductDetailResponse pr = new ProductDetailResponse();
-        pr.setId(p.getId());
-        pr.setName(p.getName());
-        pr.setDescription(p.getDescription());
-        pr.setPrice(p.getPrice());
-        pr.setOldPrice(p.getOldPrice());
+            ProductDetailResponse pr = new ProductDetailResponse();
+            pr.setId(p.getId());
+            pr.setName(p.getName());
+            pr.setDescription(p.getDescription());
 
-        vr.setProduct(pr);
+            CartItemResponse res = new CartItemResponse();
+            res.setId(item.getId());
+            res.setQuantity(item.getQuantity());
 
-        CartItemResponse res = new CartItemResponse();
-        res.setId(item.getId());
-        res.setQuantity(item.getQuantity());
+            res.setVariantId(v.getId());
+            res.setProductName(p.getName());
+            res.setProductImage(images.isEmpty() ? "" : images.get(0));
 
-        // ❌ KHÔNG cần nữa
-        // res.setUserId(item.getUserId());
+            res.setColor(v.getColor());
+            res.setSize(v.getSize());
 
-        res.setVariant(vr);
+            res.setPrice(v.getPrice());
+            res.setStock(v.getStock());
 
-        return res;
+            return res;
 
-    }).toList();
-}
+        }).toList();
+    }
 
     // ❌ REMOVE
     @DeleteMapping("/{id}")
@@ -105,9 +104,10 @@ public List<CartItemResponse> getCart() {
     // 🔄 UPDATE
     @PutMapping("/{id}")
     public void update(@PathVariable Long id,
-                       @RequestParam int qty) {
+            @RequestParam int qty) {
         cartService.updateQty(id, qty);
     }
+
     @DeleteMapping("/clear")
     public void clearCart() {
 

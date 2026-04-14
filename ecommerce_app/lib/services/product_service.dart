@@ -6,7 +6,6 @@ import '../models/product.dart';
 class ProductService {
   final String baseUrl = "http://10.0.2.2:8080/api";
 
-  // 🔥 GET TOKEN
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("token");
@@ -17,14 +16,26 @@ class ProductService {
     };
   }
 
-  // ================= GET ALL =================
-  Future<List<Product>> getProducts() async {
+  Future<List<Product>> getProducts({int? categoryId, String? keyword}) async {
     final headers = await _getHeaders();
 
-    final response = await http.get(
-      Uri.parse("$baseUrl/products"),
-      headers: headers,
-    );
+    String url = "$baseUrl/products";
+
+    List<String> query = [];
+
+    if (categoryId != null) {
+      query.add("categoryId=$categoryId");
+    }
+
+    if (keyword != null && keyword.isNotEmpty) {
+      query.add("keyword=$keyword");
+    }
+
+    if (query.isNotEmpty) {
+      url += "?${query.join("&")}";
+    }
+
+    final response = await http.get(Uri.parse(url), headers: headers);
 
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
@@ -34,7 +45,6 @@ class ProductService {
     }
   }
 
-  // ================= GET BY ID =================
   Future<Product> getProductById(int id) async {
     final headers = await _getHeaders();
 

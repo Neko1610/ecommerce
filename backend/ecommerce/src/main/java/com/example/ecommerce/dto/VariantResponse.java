@@ -9,7 +9,9 @@ public class VariantResponse {
     private String size;
     private String color;
     private double price;
+    private Double oldPrice;
     private int stock;
+    private String image;
     private ProductDetailResponse product;
     private List<String> images;
 

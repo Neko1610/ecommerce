@@ -1,13 +1,15 @@
+import 'package:ecommerce_app/providers/CategoryProvider.dart';
+import 'package:ecommerce_app/providers/ProductProvider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widgets/home/header_widget.dart';
 import '../widgets/home/search_bar_widget.dart';
 import '../widgets/home/banner_widget.dart';
 import '../widgets/home/category_grid.dart';
 import '../widgets/home/flash_sale_section.dart';
 import '../widgets/home/product_card.dart';
-import '../models/product.dart';
-import '../services/product_service.dart';
-
+import '../screens/explore_screen.dart';
+import '../screens/wishlist_screen.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
 
@@ -21,26 +23,23 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  // 🔥 cache API
-  late Future<List<Product>> productFuture;
-
-  // 🔥 cache UI
-  late Widget homeScreen;
-
   @override
   void initState() {
     super.initState();
-    productFuture = ProductService().getProducts();
-    homeScreen = _buildHome();
+
+    Future.microtask(() {
+      context.read<CategoryProvider>().fetchCategories();
+      context.read<ProductProvider>().fetchProducts();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final screens = [
-      homeScreen,
-      homeScreen, // Explore tạm
+      _buildHome(),
+      ExploreScreen(), 
       CartScreen(),
-      homeScreen, // Wishlist tạm
+      WishlistScreen(), 
       const ProfileScreen(),
     ];
 
@@ -100,23 +99,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
 
                   const SizedBox(height: 12),
-
-                  FutureBuilder<List<Product>>(
-                    future: productFuture,
-                    builder: (context, snapshot) {
-                      // 🔄 loading
-                      if (snapshot.connectionState == ConnectionState.waiting) {
+                  Consumer<ProductProvider>(
+                    builder: (context, provider, _) {
+                      if (provider.isLoading) {
                         return const Center(child: CircularProgressIndicator());
                       }
 
-                      // ❌ error
-                      if (snapshot.hasError) {
-                        return const Center(
-                          child: Text("Failed to load products"),
-                        );
+                      if (provider.error != null) {
+                        return Center(child: Text(provider.error!));
                       }
 
-                      final products = snapshot.data!;
+                      final products = provider.products;
 
                       return GridView.builder(
                         shrinkWrap: true,

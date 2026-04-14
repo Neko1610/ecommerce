@@ -1,18 +1,36 @@
 import 'package:flutter/material.dart';
 
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({super.key});
+  final VoidCallback onLogout;
+
+  const ProfileHeader({
+    super.key,
+    required this.onLogout,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        /// 🔥 LOGOUT BUTTON (top right)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: onLogout,
+              icon: const Icon(Icons.logout, color: Colors.red),
+            ),
+          ],
+        ),
+
         Stack(
           children: [
             const CircleAvatar(
               radius: 55,
               backgroundImage: NetworkImage("https://i.pravatar.cc/300"),
             ),
+
+            /// ✏️ EDIT AVATAR
             Positioned(
               bottom: 0,
               right: 0,
@@ -27,13 +45,20 @@ class ProfileHeader extends StatelessWidget {
             ),
           ],
         ),
+
         const SizedBox(height: 12),
+
         const Text(
           "John Doe",
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
+
         const SizedBox(height: 4),
-        const Text("j.doe@email.com", style: TextStyle(color: Colors.grey)),
+
+        const Text(
+          "j.doe@email.com",
+          style: TextStyle(color: Colors.grey),
+        ),
       ],
     );
   }

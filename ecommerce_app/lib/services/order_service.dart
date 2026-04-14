@@ -5,13 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 class OrderService {
   final String baseUrl = "http://10.0.2.2:8080/api/order";
 
-  // 🔐 GET TOKEN
   Future<String> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString("token") ?? "";
   }
 
-  // 🔥 CHECKOUT
   Future<void> checkout(Map<String, dynamic> data) async {
     final token = await getToken();
 
@@ -29,7 +27,6 @@ class OrderService {
     }
   }
 
-  // 🔥 GET ORDER LIST
   Future<List<dynamic>> getOrders() async {
     final token = await getToken();
 
@@ -41,7 +38,6 @@ class OrderService {
     return jsonDecode(res.body);
   }
 
-  // 🔥 GET ORDER DETAIL
   Future<Map<String, dynamic>> getOrderDetail(int id) async {
     final token = await getToken();
 

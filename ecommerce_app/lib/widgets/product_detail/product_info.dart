@@ -6,62 +6,79 @@ class ProductInfo extends StatelessWidget {
   final Product product;
   final Variant? variant;
 
-  const ProductInfo({super.key, required this.product, required this.variant});
+  const ProductInfo({
+    super.key,
+    required this.product,
+    required this.variant,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final price = variant?.price ?? product.price;
+
+    /// ✅ giá đúng
+    final price = variant?.price ?? product.minPrice;
+
+    /// ✅ giá cũ theo variant
+    final oldPrice = variant?.oldPrice;
 
     return Padding(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 8),
 
+          const SizedBox(height: 8),
+
+          /// 🔥 NAME
           Text(
             product.name,
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+            ),
           ),
 
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
 
           Row(
             children: [
-              /// 🔥 GIÁ THEO VARIANT
+
+              /// 🔥 PRICE
               Text(
                 "\$${price.toStringAsFixed(0)}",
-                style: TextStyle(
+                style: const TextStyle(
                   color: Color(0xff137fec),
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
 
-              /// nếu có giảm giá
-              if (product.oldPrice != null) ...[
-                SizedBox(width: 8),
+              /// 🔥 OLD PRICE + DISCOUNT (THEO VARIANT)
+              if (oldPrice != null) ...[
+
+                const SizedBox(width: 8),
 
                 Text(
-                  "\$${product.oldPrice!.toStringAsFixed(0)}",
-                  style: TextStyle(
+                  "\$${oldPrice.toStringAsFixed(0)}",
+                  style: const TextStyle(
                     decoration: TextDecoration.lineThrough,
                     color: Colors.grey,
                   ),
                 ),
 
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
 
-                /// % giảm (dùng price variant)
+                /// % giảm
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Color(0xff137fec).withOpacity(0.1),
+                    color: const Color(0xff137fec).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    "-${(((product.oldPrice! - price) / product.oldPrice!) * 100).round()}%",
-                    style: TextStyle(
+                    "-${(((oldPrice - price) / oldPrice) * 100).round()}%",
+                    style: const TextStyle(
                       color: Color(0xff137fec),
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
