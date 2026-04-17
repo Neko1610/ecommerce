@@ -1,10 +1,8 @@
-import 'package:ecommerce_app/models/cart_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/cart_service.dart';
 import '../../models/product.dart';
 import '../../providers/WishlistProvider.dart';
-import '../../providers/CartProvider.dart';
+import '../../services/cart_service.dart';
 
 class WishlistItemCard extends StatelessWidget {
   final Product product;
@@ -14,10 +12,9 @@ class WishlistItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final variant = product.variants.isNotEmpty ? product.variants.first : null;
-
     final price = variant?.price ?? product.minPrice;
     final oldPrice = variant?.oldPrice;
-
+    final isFlashSale = variant?.flashSale == true;
     final isOutOfStock = variant?.stock == 0;
 
     return Container(
@@ -25,17 +22,14 @@ class WishlistItemCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6),
         ],
       ),
-
       child: Column(
         children: [
-          /// 🔥 IMAGE + BADGES
           Expanded(
             child: Stack(
               children: [
-                /// IMAGE
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(14),
@@ -46,8 +40,6 @@ class WishlistItemCard extends StatelessWidget {
                     fit: BoxFit.contain,
                   ),
                 ),
-
-                /// ❤️ REMOVE
                 Positioned(
                   top: 8,
                   right: 8,
@@ -62,8 +54,6 @@ class WishlistItemCard extends StatelessWidget {
                     ),
                   ),
                 ),
-
-                /// 🔻 DISCOUNT
                 if (oldPrice != null && oldPrice > price)
                   Positioned(
                     top: 8,
@@ -87,12 +77,10 @@ class WishlistItemCard extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                /// ❌ OUT OF STOCK
                 if (isOutOfStock)
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(14),
                       ),
@@ -110,35 +98,30 @@ class WishlistItemCard extends StatelessWidget {
               ],
             ),
           ),
-
-          /// 🔥 INFO
           Padding(
             padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// NAME
                 Text(
                   product.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-
                 const SizedBox(height: 4),
-
-                /// PRICE
                 Row(
                   children: [
                     Text(
                       "\$${price.toStringAsFixed(0)}",
-                      style: const TextStyle(
-                        color: Color(0xff137fec),
+                      style: TextStyle(
+                        color: isFlashSale
+                            ? Colors.red
+                            : const Color(0xff137fec),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
-                    if (oldPrice != null) ...[
+                    if (oldPrice != null && oldPrice > price) ...[
                       const SizedBox(width: 6),
                       Text(
                         "\$${oldPrice.toStringAsFixed(0)}",
@@ -151,10 +134,7 @@ class WishlistItemCard extends StatelessWidget {
                     ],
                   ],
                 ),
-
                 const SizedBox(height: 8),
-
-                /// 🛒 ADD TO CART
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -167,13 +147,19 @@ class WishlistItemCard extends StatelessWidget {
                                 quantity: 1,
                               );
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Added to cart")),
-                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Added to cart"),
+                                  ),
+                                );
+                              }
                             } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Error: $e")),
-                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Error: $e")),
+                                );
+                              }
                             }
                           },
                     child: const Text("Add to Cart"),

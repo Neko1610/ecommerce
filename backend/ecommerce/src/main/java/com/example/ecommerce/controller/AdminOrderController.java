@@ -20,7 +20,7 @@ import com.example.ecommerce.services.UserService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/api/admin/orders")
 @RequiredArgsConstructor
 public class AdminOrderController {
 

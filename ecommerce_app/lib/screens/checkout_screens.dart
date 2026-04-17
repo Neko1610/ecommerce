@@ -10,6 +10,7 @@ import '../widgets/checkout/payment_method_section.dart';
 import '../widgets/checkout/order_summary_section.dart';
 import '../widgets/checkout/checkout_bottom_bar.dart';
 import '../services/order_service.dart';
+import '../services/api_client.dart';
 import '../models/cart_item.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -48,10 +49,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (selectedAddressId == addressId) return;
 
     final token = await getToken();
+    final headers = <String, String>{};
+    if (token.isNotEmpty) {
+      headers["Authorization"] = "Bearer $token";
+    }
 
     final res = await http.post(
-      Uri.parse("http://10.0.2.2:8080/api/shipping/calculate/$addressId"),
-      headers: {"Authorization": "Bearer $token"},
+      ApiClient.uri("/shipping/calculate/$addressId"),
+      headers: headers,
     );
 
     if (res.body.isEmpty) return;

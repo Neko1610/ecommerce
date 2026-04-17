@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/product.dart';
 import '../models/variant.dart';
+import '../services/cart_service.dart';
 import '../services/product_service.dart';
-
+import '../widgets/product_detail/bottom_action_bar.dart';
+import '../widgets/product_detail/color_selector.dart';
+import '../widgets/product_detail/description_widget.dart';
 import '../widgets/product_detail/image_slider.dart';
 import '../widgets/product_detail/product_info.dart';
-import '../widgets/product_detail/color_selector.dart';
 import '../widgets/product_detail/size_selector.dart';
-import '../widgets/product_detail/description_widget.dart';
-import '../widgets/product_detail/bottom_action_bar.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final int productId;
@@ -24,16 +22,13 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final ProductService _service = ProductService();
+  final CartService _cartService = CartService();
 
   Product? product;
   bool isLoading = true;
 
   String selectedColor = "";
   String selectedSize = "";
-  Future<String> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString("token") ?? "";
-  }
 
   @override
   void initState() {
@@ -44,6 +39,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Future<void> fetchProduct() async {
     try {
       final data = await _service.getProductById(widget.productId);
+      if (!mounted) return;
 
       setState(() {
         product = data;
@@ -52,7 +48,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         isLoading = false;
       });
     } catch (e) {
-      print("ERROR: $e");
+      debugPrint("ERROR: $e");
+      if (!mounted) return;
       setState(() => isLoading = false);
     }
   }
@@ -63,6 +60,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         (v) => v.color == selectedColor && v.size == selectedSize,
       );
     } catch (e) {
+      debugPrint(e.toString());
       return null;
     }
   }
@@ -85,25 +83,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         .toList();
   }
 
-  Future<void> addToCartApi(int variantId) async {
-    final token = await getToken();
-
-    final url = Uri.parse("http://10.0.2.2:8080/api/cart/add");
-
-    final res = await http.post(
-      url,
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({"variantId": variantId, "quantity": 1}),
-    );
-
-    if (res.statusCode != 200) {
-      throw Exception("Failed to add cart");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -124,15 +103,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ImageSlider(image: getCurrentImage()),
-
             ProductInfo(product: product!, variant: getSelectedVariant()),
-
             if (product!.colors.isNotEmpty)
               ColorSelector(
                 colors: product!.colors,
@@ -148,7 +124,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   });
                 },
               ),
-
             if (product!.sizes.isNotEmpty)
               SizeSelector(
                 sizes: product!.sizes,
@@ -156,50 +131,49 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 selectedSize: selectedSize,
                 onSelect: (s) => setState(() => selectedSize = s),
               ),
-
             DescriptionWidget(text: product!.description),
-
             const SizedBox(height: 100),
           ],
         ),
       ),
-
       bottomNavigationBar: BottomActionBar(
         onAddToCart: () async {
+          final messenger = ScaffoldMessenger.of(context);
+          final navigator = Navigator.of(context);
+
           if (selectedColor.isEmpty || selectedSize.isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            messenger.showSnackBar(
               const SnackBar(content: Text("Please select size & color")),
             );
             return;
           }
 
           final variant = getSelectedVariant();
-
           if (variant == null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text("Variant not found")));
+            messenger.showSnackBar(
+              const SnackBar(content: Text("Variant not found")),
+            );
             return;
           }
 
           try {
-            await addToCartApi(variant.id);
+            await _cartService.addToCart(variantId: variant.id, quantity: 1);
+            if (!mounted) return;
 
-            ScaffoldMessenger.of(context).showSnackBar(
+            messenger.showSnackBar(
               SnackBar(
                 content: const Text("Added to cart"),
                 action: SnackBarAction(
                   label: "View",
                   onPressed: () {
-                    Navigator.pushNamed(context, "/cart");
+                    navigator.pushNamed("/cart");
                   },
                 ),
               ),
             );
           } catch (e) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text("Error: $e")));
+            if (!mounted) return;
+            messenger.showSnackBar(SnackBar(content: Text("Error: $e")));
           }
         },
       ),

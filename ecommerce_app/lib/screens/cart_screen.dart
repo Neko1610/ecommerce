@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+
+import '../models/cart_item.dart';
 import '../services/cart_service.dart';
-import 'checkout_screens.dart';
-import '../widgets/cart/cart_item_widget.dart';
+import '../widgets/cart/cart_bottom_bar.dart';
 import '../widgets/cart/cart_header.dart';
+import '../widgets/cart/cart_item_widget.dart';
 import '../widgets/cart/cart_summary.dart';
 import '../widgets/cart/voucher_input.dart';
-import '../widgets/cart/cart_bottom_bar.dart';
-import '../models/cart_item.dart';
+import 'checkout_screens.dart';
 
 class CartScreen extends StatefulWidget {
+  const CartScreen({super.key});
+
   @override
   State<CartScreen> createState() => _CartScreenState();
 }
@@ -41,77 +44,79 @@ class _CartScreenState extends State<CartScreen> {
   Future<void> loadCart() async {
     try {
       final data = await _service.getCart();
+      if (!mounted) return;
 
       setState(() {
         items = data;
         isLoading = false;
       });
     } catch (e) {
+      debugPrint(e.toString());
+      if (!mounted) return;
       setState(() => isLoading = false);
     }
   }
 
-  // 🔥 APPLY VOUCHER
   void applyVoucher(String code) async {
     try {
       final subtotal = getSubtotal();
       final res = await _service.applyVoucher(code, subtotal);
+      if (!mounted) return;
 
       setState(() {
-        discountPercent = res['discountPercent'];
+        discountPercent = (res['discountPercent'] ?? 0).toDouble();
         appliedCode = code;
       });
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Applied $code")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Applied $code")));
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Voucher lỗi")));
+      debugPrint(e.toString());
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Voucher error")));
     }
   }
 
-  // 🔥 UPDATE QUANTITY
   Future<void> updateQty(CartItem item, int newQty) async {
     try {
-      await _service.updateQuantity(item.variantId, newQty);
+      await _service.updateQuantity(item.id, newQty);
+      if (!mounted) return;
 
       setState(() {
         final index = items.indexOf(item);
         items[index] = item.copyWith(quantity: newQty);
       });
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
-  // 🔥 DELETE ITEM
-Future<void> deleteItem(CartItem item) async {
-  try {
-    await _service.deleteItem(item.id);
+  Future<void> deleteItem(CartItem item) async {
+    try {
+      await _service.deleteItem(item.id);
+      if (!mounted) return;
 
-    setState(() {
-      items.removeWhere((i) => i.id == item.id);
-    });
-  } catch (e) {
-    print(e);
+      setState(() {
+        items.removeWhere((i) => i.id == item.id);
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
       backgroundColor: const Color(0xfff6f7f8),
-
       bottomNavigationBar: CartBottomBar(
         total: getTotal(),
-
-        // 🔥 CHECKOUT
         onCheckout: items.isEmpty
             ? null
             : () {
@@ -127,38 +132,32 @@ Future<void> deleteItem(CartItem item) async {
                 ).then((_) => loadCart());
               },
       ),
-
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: Column(
             children: [
               CartHeader(),
-
               Expanded(
                 child: items.isEmpty
-                    ? const Center(child: Text("Giỏ hàng trống 🛒"))
+                    ? const Center(child: Text("Cart is empty"))
                     : ListView(
                         padding: const EdgeInsets.all(16),
                         children: [
-                          ...items.map((e) => CartItemWidget(
-                                item: e,
-                                onUpdate: (newQty) =>
-                                    updateQty(e, newQty),
-                                onDelete: () => deleteItem(e),
-                              )),
-
+                          ...items.map(
+                            (e) => CartItemWidget(
+                              item: e,
+                              onUpdate: (newQty) => updateQty(e, newQty),
+                              onDelete: () => deleteItem(e),
+                            ),
+                          ),
                           const SizedBox(height: 20),
-
                           VoucherInput(onApply: applyVoucher),
-
                           const SizedBox(height: 20),
-
                           CartSummary(
                             items: items,
                             discountPercent: discountPercent,
                           ),
-
                           const SizedBox(height: 100),
                         ],
                       ),

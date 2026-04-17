@@ -20,12 +20,23 @@ const mapOrderDetailItem = (raw: any): OrderDetailItem => ({
 
 export const orderService = {
   async getOrders() {
-    const { data } = await api.get('/orders');
-    return parseArray<any>(data).map(mapOrderSummary);
+    try {
+      const { data } = await api.get('/admin/orders');
+      return parseArray<any>(data).map(mapOrderSummary);
+    } catch {
+      const { data } = await api.get('/orders');
+      return parseArray<any>(data).map(mapOrderSummary);
+    }
   },
 
   async getOrderDetail(id: number): Promise<OrderDetail> {
-    const { data } = await api.get(`/orders/${id}`);
+    let data: any;
+    try {
+      ({ data } = await api.get(`/admin/orders/${id}`));
+    } catch {
+      ({ data } = await api.get(`/orders/${id}`));
+    }
+
     return {
       order: {
         id: Number(data?.order?.id || id),
@@ -43,7 +54,13 @@ export const orderService = {
   },
 
   async updateOrderStatus(id: number, status: string) {
-    const { data } = await api.put(`/orders/${id}/status`, { status });
+    let data: any;
+    try {
+      ({ data } = await api.put(`/admin/orders/${id}/status`, { status }));
+    } catch {
+      ({ data } = await api.put(`/orders/${id}/status`, { status }));
+    }
+
     return {
       id: Number(data?.id || id),
       status: String(data?.status || status),

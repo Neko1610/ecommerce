@@ -22,7 +22,8 @@ public class JwtFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
+    protected void doFilterInternal(
+            HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain)
             throws ServletException, IOException {
@@ -30,32 +31,30 @@ public class JwtFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
 
         if (header != null && header.startsWith("Bearer ")) {
-
             String token = header.substring(7);
 
             try {
                 String email = jwtUtil.extractUsername(token);
                 String role = jwtUtil.extractRole(token);
 
-                if (role == null)
-                    role = "USER";
+                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        email,
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role)));
+                    if (role != null && !role.startsWith("ROLE_")) {
+                        role = "ROLE_" + role;
+                    }
 
-                // 🔥 QUAN TRỌNG NHẤT (fix 403)
-                SecurityContextHolder.getContext().setAuthentication(auth);
-                System.out.println("HEADER: " + header);
-                System.out.println("TOKEN: " + token);
-                System.out.println("EMAIL: " + email);
-                System.out.println("ROLE: " + role);
-                System.out.println("AUTH SET: " + SecurityContextHolder.getContext().getAuthentication());
+                    System.out.println("ROLE FINAL: " + role); // debug
 
-            } catch (Exception e) {
-                System.out.println("JWT ERROR: " + e.getMessage());
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            email,
+                            null,
+                            List.of(new SimpleGrantedAuthority(role)));
 
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+
+            } catch (Exception ex) {
+                System.out.println("JWT ERROR: " + ex.getMessage());
             }
         }
 

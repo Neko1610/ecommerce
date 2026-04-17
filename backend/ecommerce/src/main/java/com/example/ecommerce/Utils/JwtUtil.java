@@ -1,43 +1,47 @@
 package com.example.ecommerce.Utils;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
+import java.util.Date;
 
 import javax.crypto.SecretKey;
-import java.util.Date;
+
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
 
-    private final SecretKey SECRET_KEY =
+    private final SecretKey secretKey =
             Keys.hmacShaKeyFor("mysecretkeymysecretkeymysecretkey".getBytes());
 
-    // 🔥 CREATE TOKEN
     public String generateToken(String email, String role) {
         return Jwts.builder()
                 .setSubject(email)
-                .claim("role", role) // 👈 QUAN TRỌNG
+                .claim("role", normalizeRole(role))
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
-                .signWith(SECRET_KEY)
+                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24))
+                .signWith(secretKey)
                 .compact();
     }
 
-    // 🔥 GET EMAIL
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();
     }
 
-    // 🔥 GET ROLE
     public String extractRole(String token) {
-        return extractAllClaims(token).get("role", String.class);
+        return normalizeRole(extractAllClaims(token).get("role", String.class));
     }
 
-    // 🔥 CORE
+    public String normalizeRole(String role) {
+        String normalized = role == null || role.isBlank() ? "ROLE_USER" : role.trim().toUpperCase();
+        return normalized.startsWith("ROLE_") ? normalized : "ROLE_" + normalized;
+    }
+
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
+                .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

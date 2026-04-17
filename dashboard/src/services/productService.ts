@@ -8,6 +8,7 @@ const mapVariant = (raw: any): ProductVariant => ({
   color: String(raw?.color || ''),
   price: Number(raw?.price || 0),
   oldPrice: raw?.oldPrice == null ? null : Number(raw.oldPrice),
+  flashSale: Boolean(raw?.flashSale),
   stock: Number(raw?.stock || 0),
   image: String(raw?.image || raw?.images?.[0] || ''),
   images: Array.isArray(raw?.images) ? raw.images.map((image: unknown) => String(image)) : [],
@@ -39,17 +40,17 @@ export const productService = {
   },
 
   async createProduct(payload: ProductPayload) {
-    const { data } = await api.post('/products', toPayload(payload));
+    const { data } = await api.post('/admin/products', toPayload(payload));
     return mapProduct(data);
   },
 
   async updateProduct(id: number, payload: ProductPayload) {
-    const { data } = await api.put(`/products/${id}`, toPayload(payload));
+    const { data } = await api.put(`/admin/products/${id}`, toPayload(payload));
     return mapProduct(data);
   },
 
   async deleteProduct(id: number) {
-    await api.delete(`/products/${id}`);
+    await api.delete(`/admin/products/${id}`);
   },
 
   async getVariants(productId: number) {
@@ -67,7 +68,7 @@ export const productService = {
       image: payload.image,
     };
 
-    const { data } = await api.post(`/products/${payload.productId}/variants`, body);
+    const { data } = await api.post(`/admin/products/${payload.productId}/variants`, body);
     return mapVariant(data);
   },
 
@@ -84,11 +85,11 @@ export const productService = {
       },
     };
 
-    const { data } = await api.put(`/variants/${id}`, body);
+    const { data } = await api.put(`/admin/variants/${id}`, body);
     return mapVariant(data);
   },
 
   async deleteVariant(id: number) {
-    await api.delete(`/variants/${id}`);
+    await api.delete(`/admin/variants/${id}`);
   },
 };

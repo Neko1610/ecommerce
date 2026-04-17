@@ -1,55 +1,54 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:flutter/foundation.dart';
+
+import 'api_client.dart';
 
 class OrderService {
-  final String baseUrl = "http://10.0.2.2:8080/api/order";
-
-  Future<String> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString("token") ?? "";
-  }
-
   Future<void> checkout(Map<String, dynamic> data) async {
-    final token = await getToken();
+    try {
+      final res = await ApiClient.post(
+        "/order/checkout",
+        requiresAuth: true,
+        body: data,
+      );
 
-    final res = await http.post(
-      Uri.parse("$baseUrl/checkout"),
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode(data),
-    );
-
-    if (res.statusCode != 200) {
-      throw Exception(res.body);
+      if (res.statusCode != 200) {
+        throw Exception(res.body);
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
     }
   }
 
   Future<List<dynamic>> getOrders() async {
-    final token = await getToken();
+    try {
+      final res = await ApiClient.get("/order", requiresAuth: true);
 
-    final res = await http.get(
-      Uri.parse(baseUrl),
-      headers: {"Authorization": "Bearer $token"},
-    );
+      if (res.statusCode != 200) {
+        throw Exception("Failed to load orders: ${res.body}");
+      }
 
-    return jsonDecode(res.body);
+      return jsonDecode(res.body) as List<dynamic>;
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> getOrderDetail(int id) async {
-    final token = await getToken();
+    try {
+      final res = await ApiClient.get("/order/$id", requiresAuth: true);
 
-    final res = await http.get(
-      Uri.parse("$baseUrl/$id"),
-      headers: {"Authorization": "Bearer $token"},
-    );
+      if (res.statusCode != 200) {
+        throw Exception("Order not found");
+      }
 
-    if (res.statusCode != 200) {
-      throw Exception("Order not found");
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
     }
-
-    return jsonDecode(res.body);
   }
 }

@@ -14,6 +14,7 @@ import com.example.ecommerce.dto.OrderRequest;
 import com.example.ecommerce.dto.OrderItemRequest;
 import com.example.ecommerce.dto.OrderListResponse;
 import com.example.ecommerce.model.Address;
+import com.example.ecommerce.model.FlashSaleItem;
 import com.example.ecommerce.model.Order;
 import com.example.ecommerce.model.OrderItem;
 import com.example.ecommerce.model.ProductVariant;
@@ -48,6 +49,7 @@ public class OrderService {
     private final CartRepository cartRepository;
     private final AddressRepository addressRepository;
     private final ShippingService shippingService;
+    private final FlashSaleService flashSaleService;
 
     // 🔥 CHECKOUT (JWT)
     @Transactional
@@ -64,8 +66,20 @@ public class OrderService {
             ProductVariant variant = variantRepo.findById(item.getVariantId())
                     .orElseThrow(() -> new RuntimeException("Variant not found"));
 
-            double price = variant.getPrice();
             int qty = item.getQuantity();
+            if (variant.getStock() < qty) {
+                throw new RuntimeException("Insufficient stock");
+            }
+
+            FlashSaleItem flashSaleItem = flashSaleService.getActiveItem(variant.getId())
+                    .filter(activeItem -> activeItem.getSold() < activeItem.getQuantity())
+                    .orElse(null);
+
+            if (flashSaleItem != null && flashSaleItem.getSold() + qty > flashSaleItem.getQuantity()) {
+                throw new RuntimeException("Flash sale out of stock");
+            }
+
+            double price = flashSaleItem != null ? flashSaleItem.getFlashPrice() : variant.getPrice();
 
             subtotal += price * qty;
 
@@ -76,6 +90,13 @@ public class OrderService {
             oi.setQuantity(qty);
 
             orderItems.add(oi);
+
+            variant.setStock(variant.getStock() - qty);
+            variantRepo.save(variant);
+
+            if (flashSaleItem != null) {
+                flashSaleService.consumeStock(variant.getId(), qty);
+            }
         }
 
         double discount = 0;

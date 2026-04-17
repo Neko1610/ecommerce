@@ -3,9 +3,10 @@ package com.example.ecommerce.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import com.example.ecommerce.repository.*;
-import com.example.ecommerce.model.User;
+
 import com.example.ecommerce.dto.ProfileResponse;
+import com.example.ecommerce.model.User;
+import com.example.ecommerce.repository.UserRepository;
 
 @Service
 public class UserService {
@@ -33,17 +34,21 @@ public class UserService {
                 .build();
     }
 
+    private String normalizeRole(String role) {
+        String normalized = role == null || role.isBlank() ? "ROLE_USER" : role.trim().toUpperCase();
+        return normalized.startsWith("ROLE_") ? normalized : "ROLE_" + normalized;
+    }
+
     public ProfileResponse getProfile() {
         return mapToResponse(getCurrentUserEntity());
     }
 
     public boolean isAdmin() {
-        return getCurrentUserEntity().getRole().equals("ADMIN");
+        return "ROLE_ADMIN".equals(normalizeRole(getCurrentUserEntity().getRole()));
     }
 
     public void requireAdmin() {
-        User user = getCurrentUserEntity();
-        if (!"ADMIN".equals(user.getRole())) {
+        if (!isAdmin()) {
             throw new RuntimeException("Forbidden");
         }
     }

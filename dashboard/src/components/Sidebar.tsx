@@ -12,6 +12,7 @@ const links = [
   { to: '/orders', label: 'Orders' },
   { to: '/categories', label: 'Categories' },
   { to: '/users', label: 'Users' },
+  { to: '/flash-sale', label: 'Flash Sale' },
 ];
 
 function Sidebar({ isOpen, onClose }: SidebarProps) {

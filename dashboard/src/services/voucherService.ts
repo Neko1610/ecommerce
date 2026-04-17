@@ -12,21 +12,21 @@ const mapVoucher = (raw: any): Voucher => ({
 
 export const voucherService = {
   async getVouchers() {
-    const { data } = await api.get('/vouchers');
+    const { data } = await api.get('/admin/vouchers');
     return parseArray<any>(data).map(mapVoucher);
   },
 
   async createVoucher(payload: VoucherPayload) {
-    const { data } = await api.post('/vouchers', payload);
+    const { data } = await api.post('/admin/vouchers', payload);
     return mapVoucher(data);
   },
 
   async updateVoucher(id: number, payload: VoucherPayload) {
-    const { data } = await api.put(`/vouchers/${id}`, payload);
+    const { data } = await api.put(`/admin/vouchers/${id}`, payload);
     return mapVoucher(data);
   },
 
   async deleteVoucher(id: number) {
-    await api.delete(`/vouchers/${id}`);
+    await api.delete(`/admin/vouchers/${id}`);
   },
 };

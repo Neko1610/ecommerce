@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/product.dart';
-import '../../screens/product_detail_screen.dart';
 import '../../providers/WishlistProvider.dart';
+import '../../screens/product_detail_screen.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -12,13 +12,10 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    final variant = product.variants.isNotEmpty
-        ? product.variants.first
-        : null;
-
+    final variant = product.variants.isNotEmpty ? product.variants.first : null;
     final price = variant?.price ?? product.minPrice;
     final oldPrice = variant?.oldPrice;
+    final isFlashSale = variant?.flashSale == true;
 
     return GestureDetector(
       onTap: () {
@@ -29,38 +26,32 @@ class ProductCard extends StatelessWidget {
           ),
         );
       },
-
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
         ),
-
         child: Column(
           children: [
-
-            /// 🔥 IMAGE + ❤️
             Expanded(
               child: Stack(
                 children: [
                   ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(12)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
                     child: Image.network(
                       product.image,
                       width: double.infinity,
                       fit: BoxFit.contain,
                     ),
                   ),
-
-                  /// ❤️ WISHLIST
                   Positioned(
                     top: 8,
                     right: 8,
                     child: Consumer<WishlistProvider>(
                       builder: (context, wishlist, _) {
-                        final isFav =
-                            wishlist.isFavorite(product.id);
+                        final isFav = wishlist.isFavorite(product.id);
 
                         return GestureDetector(
                           onTap: () {
@@ -73,12 +64,8 @@ class ProductCard extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              isFav
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              color: isFav
-                                  ? Colors.red
-                                  : Colors.grey,
+                              isFav ? Icons.favorite : Icons.favorite_border,
+                              color: isFav ? Colors.red : Colors.grey,
                               size: 18,
                             ),
                           ),
@@ -89,37 +76,26 @@ class ProductCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            /// 🔥 INFO
             Padding(
               padding: const EdgeInsets.all(8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  /// NAME
                   Text(
                     product.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-
                   const SizedBox(height: 4),
-
-                  /// PRICE
                   Text(
                     "\$${price.toStringAsFixed(0)}",
-                    style: const TextStyle(
-                      color: Color(0xff137fec),
+                    style: TextStyle(
+                      color: isFlashSale ? Colors.red : const Color(0xff137fec),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  /// OLD PRICE
-                  if (oldPrice != null)
+                  if (oldPrice != null && oldPrice > price)
                     Text(
                       "\$${oldPrice.toStringAsFixed(0)}",
                       style: const TextStyle(

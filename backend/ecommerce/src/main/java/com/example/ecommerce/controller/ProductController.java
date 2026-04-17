@@ -1,5 +1,19 @@
 package com.example.ecommerce.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.example.ecommerce.dto.ProductDetailResponse;
 import com.example.ecommerce.dto.VariantResponse;
 import com.example.ecommerce.model.Category;
@@ -9,17 +23,15 @@ import com.example.ecommerce.repository.CategoryRepository;
 import com.example.ecommerce.repository.ProductImageRepository;
 import com.example.ecommerce.repository.ProductRepository;
 import com.example.ecommerce.repository.ProductVariantRepository;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import com.example.ecommerce.services.FlashSaleService;
+import com.example.ecommerce.services.UserService;
 
 @RestController
-@RequestMapping("/api/products")
 @CrossOrigin(origins = "*")
 public class ProductController {
+
+    @Autowired
+    private FlashSaleService flashSaleService;
 
     @Autowired
     private ProductRepository productRepo;
@@ -33,10 +45,10 @@ public class ProductController {
     @Autowired
     private CategoryRepository categoryRepo;
 
-    // =========================
-    // GET ALL / FILTER / SEARCH
-    // =========================
-    @GetMapping
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("/api/products")
     public List<ProductDetailResponse> getAll(
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String keyword) {
@@ -44,33 +56,27 @@ public class ProductController {
         List<Product> products;
 
         if (categoryId != null) {
-
             Category category = categoryRepo.findById(categoryId)
                     .orElseThrow(() -> new RuntimeException("Category not found"));
 
             if (category.getParent() == null) {
-
                 List<Long> subIds = categoryRepo.findByParentId(categoryId)
                         .stream()
                         .map(Category::getId)
                         .collect(Collectors.toList());
 
                 products = productRepo.findByCategoryIdIn(subIds);
-
             } else {
                 products = productRepo.findByCategoryId(categoryId);
             }
-
         } else {
             products = productRepo.findAll();
         }
 
-        // ðŸ” SEARCH
         if (keyword != null && !keyword.isEmpty()) {
             String lower = keyword.toLowerCase();
-
             products = products.stream()
-                    .filter(p -> p.getName().toLowerCase().contains(lower))
+                    .filter(product -> product.getName().toLowerCase().contains(lower))
                     .collect(Collectors.toList());
         }
 
@@ -79,23 +85,17 @@ public class ProductController {
                 .collect(Collectors.toList());
     }
 
-    // =========================
-    // GET DETAIL
-    // =========================
-    @GetMapping("/{id}")
+    @GetMapping("/api/products/{id}")
     public ProductDetailResponse getDetail(@PathVariable Long id) {
-
         Product product = productRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         return mapToResponse(product);
     }
 
-    // =========================
-    // CREATE PRODUCT
-    // =========================
-    @PostMapping
+    @PostMapping("/api/admin/products")
     public ProductDetailResponse create(@RequestBody Product product) {
+        userService.requireAdmin();
 
         if (product.getCategory() == null) {
             throw new RuntimeException("Category is required");
@@ -104,9 +104,8 @@ public class ProductController {
         Category category = categoryRepo.findById(product.getCategory().getId())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        // âŒ khÃ´ng cho chá»n category cha
         if (category.getParent() == null) {
-            throw new RuntimeException("Pháº£i chá»n subcategory");
+            throw new RuntimeException("Subcategory is required");
         }
 
         product.setCategory(category);
@@ -115,26 +114,53 @@ public class ProductController {
         return mapToResponse(savedProduct);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/admin/products/{id}")
     public void deleteProduct(@PathVariable Long id) {
+        userService.requireAdmin();
+
         if (!productRepo.existsById(id)) {
             throw new RuntimeException("Product not found");
         }
+
         productRepo.deleteById(id);
     }
 
-    // =========================
-    // GET VARIANTS
-    // =========================
-    @GetMapping("/{id}/variants")
+    @PutMapping("/api/admin/products/{id}")
+    public ProductDetailResponse updateProduct(
+            @PathVariable Long id,
+            @RequestBody Product request) {
+        userService.requireAdmin();
+
+        Product product = productRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        // update field
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+
+        if (request.getCategory() != null) {
+            Category category = categoryRepo.findById(request.getCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+
+            product.setCategory(category);
+        }
+
+        Product updated = productRepo.save(product);
+
+        return mapToResponse(updated);
+    }
+
+    @GetMapping("/api/products/{id}/variants")
     public List<VariantResponse> getVariants(@PathVariable Long id) {
         return variantRepo.findByProductId(id).stream()
                 .map(this::mapVariantResponse)
                 .collect(Collectors.toList());
     }
 
-    @PostMapping("/{id}/variants")
+    @PostMapping("/api/admin/products/{id}/variants")
     public VariantResponse addVariantForProduct(@PathVariable Long id, @RequestBody ProductVariant variant) {
+        userService.requireAdmin();
+
         Product product = productRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
@@ -143,43 +169,37 @@ public class ProductController {
         return mapVariantResponse(savedVariant);
     }
 
-    // =========================
-    // ADD VARIANT
-    // =========================
-    @PostMapping("/variant")
-    public VariantResponse addVariant(@RequestBody ProductVariant v) {
-        if (v.getProduct() == null || v.getProduct().getId() == null) {
+    @PostMapping("/api/admin/variants")
+    public VariantResponse addVariant(@RequestBody ProductVariant variant) {
+        userService.requireAdmin();
+
+        if (variant.getProduct() == null || variant.getProduct().getId() == null) {
             throw new RuntimeException("Product is required");
         }
 
-        Product product = productRepo.findById(v.getProduct().getId())
+        Product product = productRepo.findById(variant.getProduct().getId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
-        v.setProduct(product);
-        ProductVariant savedVariant = variantRepo.save(v);
+
+        variant.setProduct(product);
+        ProductVariant savedVariant = variantRepo.save(variant);
         return mapVariantResponse(savedVariant);
     }
 
-    // =========================
-    // MAP RESPONSE (QUAN TRá»ŒNG)
-    // =========================
-    private ProductDetailResponse mapToResponse(Product p) {
+    private ProductDetailResponse mapToResponse(Product product) {
+        List<ProductVariant> variants = variantRepo.findByProductId(product.getId());
 
-        List<ProductVariant> variants = variantRepo.findByProductId(p.getId());
-
-        // ðŸ–¼ IMAGE (láº¥y tá»« variant Ä‘áº§u)
         String image = "";
         if (!variants.isEmpty()) {
             image = resolveVariantImage(variants.get(0));
         }
 
-        // ðŸ’° PRICE RANGE (SAFE)
         double minPrice = variants.stream()
-                .mapToDouble(ProductVariant::getPrice)
+                .mapToDouble(variant -> flashSaleService.getPrice(variant.getId(), variant.getPrice()))
                 .min()
                 .orElse(0);
 
         double maxPrice = variants.stream()
-                .mapToDouble(ProductVariant::getPrice)
+                .mapToDouble(variant -> flashSaleService.getPrice(variant.getId(), variant.getPrice()))
                 .max()
                 .orElse(0);
 
@@ -187,17 +207,16 @@ public class ProductController {
                 .map(this::mapVariantResponse)
                 .collect(Collectors.toList());
 
-        // ðŸ“¦ RESPONSE
-        ProductDetailResponse res = new ProductDetailResponse();
-        res.setId(p.getId());
-        res.setName(p.getName());
-        res.setDescription(p.getDescription());
-        res.setMinPrice(minPrice);
-        res.setMaxPrice(maxPrice);
-        res.setImage(image);
-        res.setVariants(variantResponses);
+        ProductDetailResponse response = new ProductDetailResponse();
+        response.setId(product.getId());
+        response.setName(product.getName());
+        response.setDescription(product.getDescription());
+        response.setMinPrice(minPrice);
+        response.setMaxPrice(maxPrice);
+        response.setImage(image);
+        response.setVariants(variantResponses);
 
-        return res;
+        return response;
     }
 
     private String resolveVariantImage(ProductVariant variant) {
@@ -207,38 +226,33 @@ public class ProductController {
 
         return imageRepo.findByVariantId(variant.getId())
                 .stream()
-                .map(img -> img.getImageUrl())
+                .map(image -> image.getImageUrl())
                 .findFirst()
                 .orElse("");
     }
 
-    private VariantResponse mapVariantResponse(ProductVariant v) {
-        VariantResponse vr = new VariantResponse();
-        vr.setId(v.getId());
-        vr.setSize(v.getSize());
-        vr.setColor(v.getColor());
-        vr.setPrice(v.getPrice());
+    private VariantResponse mapVariantResponse(ProductVariant variant) {
+        VariantResponse response = new VariantResponse();
+        response.setId(variant.getId());
+        response.setSize(variant.getSize());
+        response.setColor(variant.getColor());
 
-        // ðŸ”¥ SAFE
-        Double oldPrice = v.getOldPrice();
-        vr.setOldPrice(oldPrice);
+        double originalPrice = variant.getPrice();
+        double finalPrice = flashSaleService.getPrice(variant.getId(), originalPrice);
+        boolean flashSale = flashSaleService.isFlashSale(variant.getId());
+        double oldPrice = variant.getOldPrice() != null ? variant.getOldPrice() : originalPrice;
+        response.setPrice(finalPrice);
+        response.setOldPrice(flashSale ? originalPrice : oldPrice);
+        response.setFlashSale(flashSale);
+        response.setStock(variant.getStock());
+        response.setImage(resolveVariantImage(variant));
 
-        // â— KHÃ”NG BAO GIá»œ lÃ m:
-        // if (v.getOldPrice() > ...)
-        if (oldPrice != null && oldPrice > v.getPrice()) {
-            // náº¿u cáº§n logic discount
-        }
-
-        vr.setStock(v.getStock());
-        vr.setImage(resolveVariantImage(v));
-
-        List<String> images = imageRepo.findByVariantId(v.getId())
+        List<String> images = imageRepo.findByVariantId(variant.getId())
                 .stream()
-                .map(img -> img.getImageUrl())
+                .map(image -> image.getImageUrl())
                 .collect(Collectors.toList());
 
-        vr.setImages(images);
-
-        return vr;
+        response.setImages(images);
+        return response;
     }
 }

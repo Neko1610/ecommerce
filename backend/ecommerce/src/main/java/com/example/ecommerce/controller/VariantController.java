@@ -11,19 +11,23 @@ import com.example.ecommerce.model.Product;
 import com.example.ecommerce.model.ProductVariant;
 import com.example.ecommerce.repository.ProductRepository;
 import com.example.ecommerce.repository.ProductVariantRepository;
+import com.example.ecommerce.services.UserService;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/variants")
+@RequestMapping("/api/admin/variants")
 @RequiredArgsConstructor
 public class VariantController {
 
     private final ProductVariantRepository variantRepository;
     private final ProductRepository productRepository;
+    private final UserService userService;
 
     @PutMapping("/{id}")
     public ProductVariant updateVariant(@PathVariable Long id, @RequestBody ProductVariant request) {
+        userService.requireAdmin();
+
         ProductVariant variant = variantRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Variant not found"));
 
@@ -45,6 +49,7 @@ public class VariantController {
 
     @DeleteMapping("/{id}")
     public void deleteVariant(@PathVariable Long id) {
+        userService.requireAdmin();
         variantRepository.deleteById(id);
     }
 }

@@ -14,7 +14,7 @@ public class VariantResponse {
     private String image;
     private ProductDetailResponse product;
     private List<String> images;
-
+    private Boolean flashSale;
     public ProductDetailResponse getProduct() {
     return product;
 }

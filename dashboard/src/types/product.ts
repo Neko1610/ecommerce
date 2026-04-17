@@ -5,6 +5,7 @@ export interface ProductVariant {
   color: string;
   price: number;
   oldPrice: number | null;
+  flashSale: boolean;
   stock: number;
   image: string;
   images: string[];

@@ -3,7 +3,8 @@ class Variant {
   final String color;
   final String size;
   final double price;
-  final double? oldPrice; 
+  final double? oldPrice;
+  final bool flashSale;
   final int stock;
   final List<String> images;
 
@@ -13,6 +14,7 @@ class Variant {
     required this.size,
     required this.price,
     this.oldPrice,
+    required this.flashSale,
     required this.stock,
     required this.images,
   });
@@ -23,9 +25,8 @@ class Variant {
       color: json['color'],
       size: json['size'],
       price: (json['price'] ?? 0).toDouble(),
-      oldPrice: json['oldPrice'] != null
-          ? (json['oldPrice']).toDouble()
-          : null, 
+      oldPrice: json['oldPrice'] != null ? (json['oldPrice']).toDouble() : null,
+      flashSale: json['flashSale'] == true,
       stock: json['stock'] ?? 0,
       images: List<String>.from(json['images'] ?? []),
     );

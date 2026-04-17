@@ -3,6 +3,14 @@ import axios from 'axios';
 export const AUTH_TOKEN_KEY = 'admin_access_token';
 export const AUTH_USER_KEY = 'admin_user';
 
+const normalizeToken = (token: string | null | undefined) => {
+  const normalized = String(token || '').trim();
+  if (!normalized || normalized === 'null' || normalized === 'undefined') {
+    return '';
+  }
+  return normalized.startsWith('Bearer ') ? normalized.slice(7).trim() : normalized;
+};
+
 const api = axios.create({
   baseURL: 'http://localhost:8080/api',
   headers: {
@@ -10,10 +18,15 @@ const api = axios.create({
   },
 });
 
-export const getStoredToken = () => localStorage.getItem(AUTH_TOKEN_KEY);
+export const getStoredToken = () => normalizeToken(localStorage.getItem(AUTH_TOKEN_KEY));
 
 export const setStoredToken = (token: string) => {
-  localStorage.setItem(AUTH_TOKEN_KEY, token);
+  const normalized = normalizeToken(token);
+  if (!normalized) {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    return;
+  }
+  localStorage.setItem(AUTH_TOKEN_KEY, normalized);
 };
 
 export const clearStoredAuth = () => {
@@ -31,9 +44,10 @@ const redirectToLogin = () => {
 
 api.interceptors.request.use((config) => {
   const token = getStoredToken();
-   console.log("🚀 TOKEN ĐANG GỬI:", token);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  } else if (config.headers?.Authorization) {
+    delete config.headers.Authorization;
   }
   return config;
 });

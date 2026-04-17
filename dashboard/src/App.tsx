@@ -8,6 +8,7 @@ import OrderPage from './pages/OrderPage';
 import ProductPage from './pages/ProductPage';
 import UserPage from './pages/UserPage';
 import VoucherPage from './pages/VoucherPage';
+import FlashSalePage from "./pages/FlashSalePage";
 
 function ProtectedRoute() {
   const { isAuthenticated, loading } = useAuth();
@@ -56,6 +57,7 @@ function App() {
           <Route path="/orders" element={<OrderPage />} />
           <Route path="/categories" element={<CategoryPage />} />
           <Route path="/users" element={<UserPage />} />
+          <Route path="/flash-sale" element={<FlashSalePage />} />
         </Route>
       </Route>
 

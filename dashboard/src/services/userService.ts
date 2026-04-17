@@ -14,12 +14,12 @@ const mapUser = (raw: any): User => ({
 export const userService = {
   async getProfile(): Promise<User> {
     const { data } = await api.get('/user/profile');
-    return mapUser({ ...data, role: 'Administrator' });
+    return mapUser(data);
   },
 
   async getUsers(): Promise<User[]> {
     try {
-      const { data } = await api.get('/users');
+      const { data } = await api.get('/admin/users');
       const list = parseArray<any>(data).map(mapUser);
       if (list.length) {
         return list;

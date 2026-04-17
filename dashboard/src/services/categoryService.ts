@@ -14,21 +14,20 @@ const mapCategory = (raw: any, parentId: number | null = null): Category => ({
 export const categoryService = {
   async getCategories() {
     const { data } = await api.get('/categories');
-    console.log('CATEGORY DATA:', data);
     return parseArray<any>(data).map((item) => mapCategory(item));
   },
 
   async createCategory(payload: CategoryPayload) {
-    const { data } = await api.post('/categories', payload);
+    const { data } = await api.post('/admin/categories', payload);
     return mapCategory(data, payload.parentId);
   },
 
   async updateCategory(id: number, payload: CategoryPayload) {
-    const { data } = await api.put(`/categories/${id}`, payload);
+    const { data } = await api.put(`/admin/categories/${id}`, payload);
     return mapCategory(data, payload.parentId);
   },
 
   async deleteCategory(id: number) {
-    await api.delete(`/categories/${id}`);
+    await api.delete(`/admin/categories/${id}`);
   },
 };
