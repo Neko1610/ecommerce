@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import toast from "../utils/toast";
 import Button from "../components/Button";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { flashSaleService } from "../services/flashSaleService";
 import { productService } from "../services/productService";
+import { formatVND } from "../utils/currency";
 import type {
   FlashSale,
   FlashSaleItemPayload,
@@ -270,7 +271,7 @@ export default function FlashSalePage() {
                 </option>
                 {variants.map((variant) => (
                   <option key={variant.id} value={variant.id}>
-                    {variant.size} / {variant.color} / ${variant.price.toFixed(2)}
+                    {variant.size} / {variant.color} / {formatVND(variant.price)}
                   </option>
                 ))}
               </select>

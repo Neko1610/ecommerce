@@ -74,7 +74,8 @@ class CartService {
       );
 
       if (res.statusCode != 200) {
-        throw Exception(res.body);
+        final errorBody = jsonDecode(res.body);
+        throw Exception(errorBody['error'] ?? 'Voucher error');
       }
 
       return jsonDecode(res.body);

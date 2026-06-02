@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/price_helper.dart';
 import '../../models/cart_item.dart'; // 🔥 thêm dòng này
 
 class CartSummary extends StatelessWidget {
@@ -12,19 +14,13 @@ class CartSummary extends StatelessWidget {
   });
 
   double getSubtotal() {
-    double total = 0;
-
-    for (var item in items) {
-      total += item.price * item.quantity; // 🔥 FIX
-    }
-
-    return total;
+    return PriceHelper.cartSubtotal(items);
   }
 
   @override
   Widget build(BuildContext context) {
     final subtotal = getSubtotal();
-    final discount = subtotal * (discountPercent / 100);
+    final discount = PriceHelper.voucherDiscount(subtotal, discountPercent);
     final total = subtotal - discount;
 
     return Container(
@@ -51,9 +47,7 @@ class CartSummary extends StatelessWidget {
       children: [
         Text(title),
         Text(
-          value == 0 && title == "Shipping"
-              ? "Free"
-              : "\$${value.toStringAsFixed(2)}",
+          value == 0 && title == "Shipping" ? "Free" : formatVND(value),
           style: TextStyle(
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             color: value < 0 ? Colors.red : null,

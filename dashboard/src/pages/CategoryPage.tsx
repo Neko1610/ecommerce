@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
+import toast from '../utils/toast';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import SearchInput from '../components/SearchInput';

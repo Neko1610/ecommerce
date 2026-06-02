@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../screens/profiledetail_screen.dart';
 import '../../screens/shipping_address_screen.dart';
+import '../../screens/payment_methods_screen.dart';
 
 class ProfileMenu extends StatelessWidget {
   const ProfileMenu({super.key});
@@ -18,11 +19,19 @@ class ProfileMenu extends StatelessWidget {
         }),
 
         _item(Icons.location_on, "Shipping Address", () {
-          Navigator.push(context, MaterialPageRoute(builder: (_)=> const ShippingAddressScreen()),
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ShippingAddressScreen()),
           );
         }),
 
-        _item(Icons.credit_card, "Payment Methods", () {}),
+        _item(Icons.credit_card, "Payment Methods", () {
+          Navigator.push(
+            context,
+
+            MaterialPageRoute(builder: (_) => const PaymentMethodsScreen()),
+          );
+        }),
 
         _item(Icons.shield, "Privacy Settings", () {}),
 

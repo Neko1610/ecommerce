@@ -9,10 +9,7 @@ class SecuritySection extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       child: Column(
         children: const [
-          ListTile(
-            leading: Icon(Icons.lock),
-            title: Text("Change Password"),
-          ),
+          ListTile(leading: Icon(Icons.lock), title: Text("Change Password")),
           Divider(),
           ListTile(
             leading: Icon(Icons.security),

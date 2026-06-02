@@ -13,11 +13,11 @@ class OrderSummary extends StatelessWidget {
       ),
       child: const Column(
         children: [
-          _row("Subtotal", "\$1000"),
-          _row("Shipping", "\$5"),
-          _row("Tax", "\$100"),
+          _row("Subtotal", "26.000.000₫"),
+          _row("Shipping", "50.000₫"),
+          _row("Tax", "0₫"),
           Divider(color: Colors.white24),
-          _row("Total", "\$1105", isBold: true),
+          _row("Total", "26.050.000₫", isBold: true),
         ],
       ),
     );

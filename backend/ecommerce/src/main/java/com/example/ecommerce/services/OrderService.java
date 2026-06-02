@@ -226,6 +226,9 @@ public class OrderService {
         res.setId(order.getId());
         res.setStatus(order.getStatus());
         res.setTotal(order.getTotal());
+        res.setSubtotal(order.getSubtotal());
+        res.setDiscount(order.getDiscount());
+        res.setShippingFee(order.getShippingFee());
         res.setCreatedAt(
                 order.getCreatedAt()
                         .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/utils/price_helper.dart';
+import '../core/utils/snackbar_helper.dart';
 import '../models/cart_item.dart';
 import '../services/cart_service.dart';
 import '../widgets/cart/cart_bottom_bar.dart';
@@ -26,12 +28,12 @@ class _CartScreenState extends State<CartScreen> {
   bool isLoading = true;
 
   double getSubtotal() {
-    return items.fold(0, (sum, e) => sum + e.price * e.quantity);
+    return PriceHelper.cartSubtotal(items);
   }
 
   double getTotal() {
     final subtotal = getSubtotal();
-    final discount = subtotal * discountPercent / 100;
+    final discount = PriceHelper.voucherDiscount(subtotal, discountPercent);
     return subtotal - discount;
   }
 
@@ -68,15 +70,12 @@ class _CartScreenState extends State<CartScreen> {
         appliedCode = code;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Applied $code")));
+      showAppSnackBar(context, SnackBar(content: Text("Applied $code")));
     } catch (e) {
       debugPrint(e.toString());
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Voucher error")));
+      String msg = e.toString().replaceFirst('Exception: ', '');
+      showAppSnackBar(context, SnackBar(content: Text(msg)));
     }
   }
 

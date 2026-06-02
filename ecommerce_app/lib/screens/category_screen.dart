@@ -11,7 +11,7 @@ import '../widgets/category/category_filtter.dart';
 
 class CategoryScreen extends StatefulWidget {
   final Category category;
-  
+
   const CategoryScreen({super.key, required this.category});
 
   @override

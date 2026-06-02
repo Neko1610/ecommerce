@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
+import toast from '../utils/toast';
 import SearchInput from '../components/SearchInput';
 import Table, { type TableColumn } from '../components/Table';
 import { userService } from '../services/userService';

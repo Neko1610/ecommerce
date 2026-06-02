@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/currency_formatter.dart';
 
 class OrderItems extends StatelessWidget {
   final List items;
@@ -8,8 +8,6 @@ class OrderItems extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final format = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
-
     return _card(
       Column(
         children: items.map<Widget>((e) {
@@ -49,7 +47,7 @@ class OrderItems extends StatelessWidget {
                         children: [
                           Text("x${e['quantity'] ?? 0}"),
                           Text(
-                            format.format(e['price'] ?? 0),
+                            formatVND((e['price'] as num?) ?? 0),
                             style: const TextStyle(
                               color: Colors.blue,
                               fontWeight: FontWeight.bold,

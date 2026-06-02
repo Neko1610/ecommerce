@@ -12,9 +12,7 @@ class AddAddressButton extends StatelessWidget {
       onPressed: () async {
         final result = await Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => const AddAddressScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const AddAddressScreen()),
         );
 
         if (result == true) {

@@ -27,7 +27,6 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
-
     final variantList = (json['variants'] as List? ?? [])
         .map((v) => Variant.fromJson(v))
         .toList();

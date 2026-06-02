@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 class CartHeader extends StatelessWidget {
+  const CartHeader({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Row(

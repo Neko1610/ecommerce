@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/price_helper.dart';
+import '../../core/utils/snackbar_helper.dart';
 import '../../models/product.dart';
 import '../../providers/WishlistProvider.dart';
 import '../../services/cart_service.dart';
@@ -12,8 +15,9 @@ class WishlistItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final variant = product.variants.isNotEmpty ? product.variants.first : null;
-    final price = variant?.price ?? product.minPrice;
-    final oldPrice = variant?.oldPrice;
+    final price = PriceHelper.getEffectivePrice(product, variant);
+    final oldPrice = PriceHelper.getOriginalPrice(product, variant);
+    final discountPercent = PriceHelper.getDiscountPercent(product, variant);
     final isFlashSale = variant?.flashSale == true;
     final isOutOfStock = variant?.stock == 0;
 
@@ -54,7 +58,7 @@ class WishlistItemCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (oldPrice != null && oldPrice > price)
+                if (oldPrice > price)
                   Positioned(
                     top: 8,
                     left: 8,
@@ -68,7 +72,7 @@ class WishlistItemCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        "-${(((oldPrice - price) / oldPrice) * 100).round()}%",
+                        "-$discountPercent%",
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,
@@ -113,7 +117,7 @@ class WishlistItemCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      "\$${price.toStringAsFixed(0)}",
+                      formatVND(price),
                       style: TextStyle(
                         color: isFlashSale
                             ? Colors.red
@@ -121,10 +125,10 @@ class WishlistItemCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (oldPrice != null && oldPrice > price) ...[
+                    if (oldPrice > price) ...[
                       const SizedBox(width: 6),
                       Text(
-                        "\$${oldPrice.toStringAsFixed(0)}",
+                        formatVND(oldPrice),
                         style: const TextStyle(
                           decoration: TextDecoration.lineThrough,
                           fontSize: 12,
@@ -148,7 +152,8 @@ class WishlistItemCard extends StatelessWidget {
                               );
 
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
+                                showAppSnackBar(
+                                  context,
                                   const SnackBar(
                                     content: Text("Added to cart"),
                                   ),
@@ -156,7 +161,8 @@ class WishlistItemCard extends StatelessWidget {
                               }
                             } catch (e) {
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
+                                showAppSnackBar(
+                                  context,
                                   SnackBar(content: Text("Error: $e")),
                                 );
                               }

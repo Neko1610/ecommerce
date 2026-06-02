@@ -3,6 +3,8 @@ package com.example.ecommerce.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -63,9 +65,13 @@ public class VoucherController {
     }
 
     @PostMapping("/api/vouchers/apply")
-    public Voucher apply(@RequestBody Map<String, Object> body) {
-        String code = body.get("code").toString();
-        double subtotal = Double.parseDouble(body.get("subtotal").toString());
-        return service.applyVoucher(code, subtotal);
+    public ResponseEntity<?> apply(@RequestBody Map<String, Object> body) {
+        try {
+            String code = body.get("code").toString();
+            double subtotal = Double.parseDouble(body.get("subtotal").toString());
+            return ResponseEntity.ok(service.applyVoucher(code, subtotal));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }

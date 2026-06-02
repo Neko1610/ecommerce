@@ -100,7 +100,7 @@ class _AddressSectionState extends State<AddressSection> {
     borderRadius: BorderRadius.circular(18),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.08),
+        color: Colors.black.withValues(alpha: 0.08),
         blurRadius: 12,
         offset: const Offset(0, 6),
       )
@@ -138,7 +138,7 @@ class _AddressSectionState extends State<AddressSection> {
               padding: const EdgeInsets.symmetric(
                   horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(

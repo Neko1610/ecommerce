@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/utils/currency_formatter.dart';
 import '../services/order_service.dart';
 import '../widgets/order/order_card.dart';
 import '../widgets/order/order_filter_tabs.dart';
@@ -56,11 +57,20 @@ class _OrderListScreenState extends State<OrderListScreen> {
                     itemCount: orders.length,
                     itemBuilder: (_, i) {
                       final o = orders[i];
+                      final subtotal =
+                          (o['subtotal'] as num?)?.toDouble() ??
+                          (o['total'] as num?)?.toDouble() ??
+                          0;
+                      final discount = (o['discount'] as num?)?.toDouble() ?? 0;
+                      final shipping =
+                          (o['shippingFee'] as num?)?.toDouble() ?? 0;
+                      final displayTotal =
+                          toVND(subtotal - discount) + shipping;
 
                       return OrderCard(
                         id: o['id'],
                         status: o['status'] ?? "Pending",
-                        total: (o['total'] as num?)?.toDouble() ?? 0,
+                        total: displayTotal,
                         images: o['images'] ?? [],
                       );
                     },

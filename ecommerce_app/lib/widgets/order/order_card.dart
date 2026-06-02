@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../screens/order_detail_screen.dart'; // 🔥 thêm
 
 import 'order_status_badge.dart';
@@ -55,7 +56,7 @@ class OrderCard extends StatelessWidget {
             children: [
               // 💰 FIX USD
               Text(
-                "\$${total.toStringAsFixed(2)}",
+                formatRawVND(total),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
 

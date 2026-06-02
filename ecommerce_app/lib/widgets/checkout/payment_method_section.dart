@@ -1,40 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class PaymentMethodSection extends StatefulWidget {
+import '../../models/payment_method_model.dart';
+import '../../providers/PaymentProvider.dart';
+import '../../screens/payment_methods_screen.dart';
+
+class PaymentMethodSection extends StatelessWidget {
   final Function(String) onChanged;
 
   const PaymentMethodSection({super.key, required this.onChanged});
 
-  @override
-  State<PaymentMethodSection> createState() => _PaymentMethodSectionState();
-}
-
-class _PaymentMethodSectionState extends State<PaymentMethodSection> {
-  String selected = "COD";
-
-  Widget item(String value, IconData icon, String title) {
-    final isSelected = selected == value;
-
+  Widget item({
+    required BuildContext context,
+    required String value,
+    required IconData icon,
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
-      onTap: () {
-        setState(() => selected = value);
-        widget.onChanged(value);
-      },
+      onTap: onTap,
+
       child: Container(
         padding: const EdgeInsets.all(12),
+
         margin: const EdgeInsets.only(bottom: 10),
+
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? Color(0xff137fec) : Colors.grey.shade300,
+            color: isSelected ? const Color(0xff137fec) : Colors.grey.shade300,
           ),
+
           borderRadius: BorderRadius.circular(12),
-          color: isSelected ? Color(0xffe8f1ff) : Colors.white,
+
+          color: isSelected ? const Color(0xffe8f1ff) : Colors.white,
         ),
+
         child: Row(
           children: [
             Icon(icon),
+
             const SizedBox(width: 10),
+
             Expanded(child: Text(title)),
+
             if (isSelected) const Icon(Icons.check, color: Color(0xff137fec)),
           ],
         ),
@@ -44,24 +53,115 @@ class _PaymentMethodSectionState extends State<PaymentMethodSection> {
 
   @override
   Widget build(BuildContext context) {
+    final paymentProvider = context.watch<PaymentProvider>();
+
+    final selected = paymentProvider.selectedMethod;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+
       children: [
         const Row(
           children: [
             Icon(Icons.payment, color: Color(0xff137fec)),
+
             SizedBox(width: 6),
+
             Text(
               "Payment Method",
+
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),
+
         const SizedBox(height: 10),
 
-        item("CARD", Icons.credit_card, "Credit Card"),
-        item("WALLET", Icons.account_balance_wallet, "E-Wallet"),
-        item("COD", Icons.money, "Cash on Delivery"),
+        /// CARD
+        item(
+          context: context,
+
+          value: "CARD",
+
+          icon: Icons.credit_card,
+
+          title: selected?.type == PaymentType.creditCard
+              ? selected!.subtitle
+              : "Credit Card",
+
+          isSelected: selected?.type == PaymentType.creditCard,
+
+          onTap: () async {
+            await Navigator.push(
+              context,
+
+              MaterialPageRoute(builder: (_) => const PaymentMethodsScreen()),
+            );
+
+            if (!context.mounted) return;
+
+            final updated = context.read<PaymentProvider>().selectedMethod;
+
+            if (updated?.type == PaymentType.creditCard) {
+              onChanged("CARD");
+            }
+          },
+        ),
+
+        /// WALLET
+        item(
+          context: context,
+
+          value: "WALLET",
+
+          icon: Icons.account_balance_wallet,
+
+          title:
+              selected?.type == PaymentType.momo ||
+                  selected?.type == PaymentType.zaloPay
+              ? selected!.title
+              : "E-Wallet",
+
+          isSelected:
+              selected?.type == PaymentType.momo ||
+              selected?.type == PaymentType.zaloPay,
+
+          onTap: () async {
+            await Navigator.push(
+              context,
+
+              MaterialPageRoute(builder: (_) => const PaymentMethodsScreen()),
+            );
+
+            if (!context.mounted) return;
+
+            final updated = context.read<PaymentProvider>().selectedMethod;
+
+            if (updated?.type == PaymentType.momo ||
+                updated?.type == PaymentType.zaloPay) {
+              onChanged("WALLET");
+            }
+          },
+        ),
+
+        /// COD
+        item(
+          context: context,
+
+          value: "COD",
+
+          icon: Icons.money,
+
+          title: "Cash on Delivery",
+
+          isSelected: selected == null,
+
+          onTap: () {
+            paymentProvider.clearSelectedMethod();
+
+            onChanged("COD");
+          },
+        ),
       ],
     );
   }

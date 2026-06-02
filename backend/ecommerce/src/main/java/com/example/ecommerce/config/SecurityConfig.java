@@ -16,8 +16,8 @@ import com.example.ecommerce.Utils.JwtFilter;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtFilter jwtFilter;
+        @Autowired
+        private JwtFilter jwtFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -30,13 +30,19 @@ public class SecurityConfig {
 
                         // 🔓 PUBLIC
                         .requestMatchers("/api/auth/**").permitAll()
-
+                        
+                        .requestMatchers(
+                                "/api/momo/**",
+                                "/api/payments/**"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/products", "/api/products/**",
                                 "/api/categories", "/api/categories/**",
                                 "/api/flash-sales", "/api/flash-sales/**",
                                 "/api/vouchers", "/api/vouchers/**" 
                         ).permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/api/vouchers/apply").permitAll()
 
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 

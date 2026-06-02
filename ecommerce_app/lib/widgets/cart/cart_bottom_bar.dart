@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/currency_formatter.dart';
 
 class CartBottomBar extends StatelessWidget {
   final double total;
@@ -33,7 +34,7 @@ class CartBottomBar extends StatelessWidget {
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   Text(
-                    "\$${total.toStringAsFixed(0)}",
+                    formatVND(total),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

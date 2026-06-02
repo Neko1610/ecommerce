@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/product.dart';
+import '../../models/variant.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/price_helper.dart';
 import '../../providers/ProductProvider.dart';
 import '../../screens/product_detail_screen.dart';
 import '../../services/flash_sale_service.dart';
@@ -103,11 +106,7 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
                       orElse: () => product.variants.first,
                     );
 
-                    return _FlashSaleCard(
-                      product: product,
-                      price: variant.price,
-                      oldPrice: variant.oldPrice,
-                    );
+                    return _FlashSaleCard(product: product, variant: variant);
                   },
                 ),
               ),
@@ -121,17 +120,15 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
 
 class _FlashSaleCard extends StatelessWidget {
   final Product product;
-  final double price;
-  final double? oldPrice;
+  final Variant variant;
 
-  const _FlashSaleCard({
-    required this.product,
-    required this.price,
-    required this.oldPrice,
-  });
+  const _FlashSaleCard({required this.product, required this.variant});
 
   @override
   Widget build(BuildContext context) {
+    final price = PriceHelper.getEffectivePrice(product, variant);
+    final oldPrice = PriceHelper.getOriginalPrice(product, variant);
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -171,15 +168,15 @@ class _FlashSaleCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              "\$${price.toStringAsFixed(0)}",
+              formatVND(price),
               style: const TextStyle(
                 color: Colors.red,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            if (oldPrice != null && oldPrice! > price)
+            if (oldPrice > price)
               Text(
-                "\$${oldPrice!.toStringAsFixed(0)}",
+                formatVND(oldPrice),
                 style: const TextStyle(
                   decoration: TextDecoration.lineThrough,
                   color: Colors.grey,

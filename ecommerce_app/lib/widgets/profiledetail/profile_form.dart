@@ -1,36 +1,34 @@
-  import 'package:flutter/material.dart';
-  import 'package:provider/provider.dart';
-  import '../../models/profile.dart';
-  import '../../providers/ProfileProvider.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../core/utils/snackbar_helper.dart';
+import '../../models/profile.dart';
+import '../../providers/ProfileProvider.dart';
 
-  class ProfileForm extends StatefulWidget {
-    final Profile profile;
+class ProfileForm extends StatefulWidget {
+  final Profile profile;
 
-    const ProfileForm({super.key, required this.profile});
+  const ProfileForm({super.key, required this.profile});
 
-    @override
-    State<ProfileForm> createState() => _ProfileFormState();
-  }
+  @override
+  State<ProfileForm> createState() => _ProfileFormState();
+}
 
- class _ProfileFormState extends State<ProfileForm> {
+class _ProfileFormState extends State<ProfileForm> {
   late TextEditingController fullNameController;
   late TextEditingController emailController;
   late TextEditingController phoneController;
 
-  bool isSaving = false; 
+  bool isSaving = false;
 
   @override
   void initState() {
     super.initState();
 
-    fullNameController =
-        TextEditingController(text: widget.profile.fullName);
+    fullNameController = TextEditingController(text: widget.profile.fullName);
 
-    emailController =
-        TextEditingController(text: widget.profile.email);
+    emailController = TextEditingController(text: widget.profile.email);
 
-    phoneController =
-        TextEditingController(text: widget.profile.phone);
+    phoneController = TextEditingController(text: widget.profile.phone);
   }
 
   @override
@@ -47,14 +45,16 @@
 
     // 🔥 VALIDATE
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      showAppSnackBar(
+        context,
         const SnackBar(content: Text("Name cannot be empty")),
       );
       return;
     }
 
     if (phone.length < 9) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      showAppSnackBar(
+        context,
         const SnackBar(content: Text("Invalid phone number")),
       );
       return;
@@ -65,13 +65,12 @@
     try {
       await context.read<ProfileProvider>().updateProfile(name, phone);
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      showAppSnackBar(
+        context,
         const SnackBar(content: Text("Updated successfully")),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Update failed")),
-      );
+      showAppSnackBar(context, const SnackBar(content: Text("Update failed")));
     }
 
     setState(() => isSaving = false);

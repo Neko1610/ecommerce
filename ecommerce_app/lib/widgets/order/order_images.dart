@@ -15,7 +15,7 @@ class OrderImages extends StatelessWidget {
 
     return Row(
       children: [
-        ...displayImages.map((img) => _img(img)).toList(),
+        ...displayImages.map((img) => _img(img)),
 
         /// nếu >3 thì hiện +n
         if (images.length > 3) _more(images.length - 3),

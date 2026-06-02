@@ -10,6 +10,7 @@ import com.example.ecommerce.dto.CartItemResponse;
 import com.example.ecommerce.dto.ProductDetailResponse;
 import com.example.ecommerce.dto.VariantResponse;
 import com.example.ecommerce.repository.ProductImageRepository;
+import com.example.ecommerce.services.FlashSaleService;
 import java.util.List;
 
 @RestController
@@ -19,6 +20,8 @@ public class CartController {
     private CartService cartService;
     @Autowired
     private ProductImageRepository imageRepo;
+    @Autowired
+    private FlashSaleService flashSaleService;
 
     // 🛒 ADD
     @PostMapping("/add")
@@ -59,7 +62,7 @@ public class CartController {
             vr.setId(v.getId());
             vr.setSize(v.getSize());
             vr.setColor(v.getColor());
-            vr.setPrice(v.getPrice());
+            vr.setPrice(flashSaleService.getPrice(v.getId(), v.getPrice()));
             vr.setStock(v.getStock());
 
             List<String> images = imageRepo.findByVariantId(v.getId())
@@ -87,7 +90,7 @@ public class CartController {
             res.setColor(v.getColor());
             res.setSize(v.getSize());
 
-            res.setPrice(v.getPrice());
+            res.setPrice(flashSaleService.getPrice(v.getId(), v.getPrice()));
             res.setStock(v.getStock());
 
             return res;

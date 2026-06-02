@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/utils/snackbar_helper.dart';
 import '../models/product.dart';
 import '../models/variant.dart';
 import '../services/cart_service.dart';
@@ -138,11 +139,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
       bottomNavigationBar: BottomActionBar(
         onAddToCart: () async {
-          final messenger = ScaffoldMessenger.of(context);
           final navigator = Navigator.of(context);
 
           if (selectedColor.isEmpty || selectedSize.isEmpty) {
-            messenger.showSnackBar(
+            showAppSnackBar(
+              context,
               const SnackBar(content: Text("Please select size & color")),
             );
             return;
@@ -150,7 +151,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
           final variant = getSelectedVariant();
           if (variant == null) {
-            messenger.showSnackBar(
+            showAppSnackBar(
+              context,
               const SnackBar(content: Text("Variant not found")),
             );
             return;
@@ -160,7 +162,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             await _cartService.addToCart(variantId: variant.id, quantity: 1);
             if (!mounted) return;
 
-            messenger.showSnackBar(
+            showAppSnackBar(
+              context,
               SnackBar(
                 content: const Text("Added to cart"),
                 action: SnackBarAction(
@@ -173,7 +176,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             );
           } catch (e) {
             if (!mounted) return;
-            messenger.showSnackBar(SnackBar(content: Text("Error: $e")));
+            showAppSnackBar(context, SnackBar(content: Text("Error: $e")));
           }
         },
       ),

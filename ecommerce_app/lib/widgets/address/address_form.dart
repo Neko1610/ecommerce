@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/utils/snackbar_helper.dart';
 import '../../widgets/address/address_map_review.dart';
 import '../../widgets/address/address_switch.dart';
 
@@ -64,7 +65,8 @@ class _AddressFormState extends State<AddressForm> {
 
   Future<void> save() async {
     if (mapAddress.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      showAppSnackBar(
+        context,
         const SnackBar(content: Text("Vui lòng chọn vị trí trên bản đồ")),
       );
       return;

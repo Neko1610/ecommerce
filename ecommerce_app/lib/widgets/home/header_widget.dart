@@ -16,59 +16,22 @@ class HeaderWidget extends StatelessWidget {
         children: [
           // 🛍 LOGO
           Row(
-            children: const [
-              Icon(Icons.shopping_bag, color: Color(0xff137fec), size: 28),
-              SizedBox(width: 8),
-              Text(
-                "SwiftCart",
+            children: [
+              Image.asset(
+                "assets/logo/vexo_logo1.png",
+                width: 34,
+                height: 34,
+                fit: BoxFit.contain,
+              ),
+
+              const SizedBox(width: 10),
+
+              const Text(
+                "VEXO",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Color(0xff137fec),
-                ),
-              ),
-            ],
-          ),
-
-          // 🔔 + 🛒
-          Row(
-            children: [
-              const Icon(Icons.notifications),
-
-              const SizedBox(width: 12),
-
-              // 🛒 CART ICON + BADGE
-              GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, "/cart");
-                },
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    const Icon(Icons.shopping_cart, size: 26),
-
-                    // 🔴 BADGE
-                    if (totalItems > 0)
-                      Positioned(
-                        right: -6,
-                        top: -6,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Text(
-                            "$totalItems",
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
                 ),
               ),
             ],

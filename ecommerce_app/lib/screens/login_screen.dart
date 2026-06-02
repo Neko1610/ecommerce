@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../core/utils/snackbar_helper.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,9 +16,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final password = TextEditingController();
 
   final auth = AuthService();
-  bool isLoading = false;
 
-  void login() async {
+  bool isLoading = false;
+  bool obscurePassword = true;
+  bool rememberMe = false;
+
+  Future<void> login() async {
     setState(() => isLoading = true);
 
     String? token = await auth.signIn(email.text.trim(), password.text.trim());
@@ -26,16 +31,15 @@ class _LoginScreenState extends State<LoginScreen> {
     if (token != null) {
       final prefs = await SharedPreferences.getInstance();
 
-      // 🔥 LƯU TOKEN
       await prefs.setString("token", token);
 
       Navigator.pushReplacementNamed(context, "/home");
     } else {
-      showError("Login failed");
+      showError("Đăng nhập thất bại");
     }
   }
 
-  void loginGoogle() async {
+  Future<void> loginGoogle() async {
     setState(() => isLoading = true);
 
     String? token = await auth.signInWithGoogle();
@@ -44,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (token != null) {
       final prefs = await SharedPreferences.getInstance();
+
       await prefs.setString("token", token);
 
       Navigator.pushReplacementNamed(context, "/home");
@@ -53,119 +58,356 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    showAppSnackBar(context, SnackBar(content: Text(msg)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xfff6f7f8),
+      backgroundColor: const Color(0xffF7F8F2),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-
-              const Text(
-                "Welcome back",
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 10),
-
-              const Text(
-                "Login to continue shopping",
-                style: TextStyle(color: Colors.grey),
-              ),
-
-              const SizedBox(height: 30),
-
-              TextField(
-                controller: email,
-                decoration: InputDecoration(
-                  hintText: "Email",
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 430),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(.75),
+                borderRadius: BorderRadius.circular(35),
+                border: Border.all(color: Colors.white.withOpacity(.5)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(.05),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
                   ),
-                ),
-              ),
-
-              const SizedBox(height: 15),
-
-              TextField(
-                controller: password,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "Password",
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ElevatedButton(
-                      onPressed: login,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 50),
-                      ),
-                      child: const Text("Login"),
-                    ),
-
-              const SizedBox(height: 25),
-
-              Row(
-                children: const [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    child: Text("Or continue with"),
-                  ),
-                  Expanded(child: Divider()),
                 ],
               ),
-
-              const SizedBox(height: 20),
-
-              GestureDetector(
-                onTap: loginGoogle,
-                child: Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      "Continue with Google",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+              child: Stack(
+                children: [
+                  Positioned(
+                    bottom: -10,
+                    left: -10,
+                    child: Icon(
+                      Icons.shopping_cart,
+                      size: 70,
+                      color: Colors.blue.withOpacity(.15),
                     ),
                   ),
-                ),
-              ),
 
-              const Spacer(),
+                  Positioned(
+                    bottom: -15,
+                    right: -5,
+                    child: Icon(
+                      Icons.shopping_bag,
+                      size: 65,
+                      color: Colors.orange.withOpacity(.12),
+                    ),
+                  ),
 
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, "/register");
-                  },
-                  child: const Text("Don't have an account? Sign up"),
-                ),
+                  Column(
+                    children: [
+                      const SizedBox(height: 10),
+
+                      // LOGO
+                      Container(
+                        padding: const EdgeInsets.all(28),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(.75),
+                          borderRadius: BorderRadius.circular(42),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(.08),
+                              blurRadius: 35,
+                              offset: const Offset(0, 15),
+                            ),
+                          ],
+                        ),
+                        child: Image.asset(
+                          "assets/logo/vexo_logo1.png",
+                          width: 70,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+
+                      const SizedBox(height: 22),
+
+                      const Text(
+                        "Vexo",
+                        style: TextStyle(
+                          fontSize: 31,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xff1F2937),
+                        ),
+                      ),
+
+                      const SizedBox(height: 5),
+
+                      const Text(
+                        "Trải nghiệm mua sắm đẳng cấp",
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                      ),
+
+                      const SizedBox(height: 42),
+
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Chào mừng trở lại",
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff1F2937),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Vui lòng nhập thông tin để đăng nhập",
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // EMAIL
+                      _buildInput(
+                        controller: email,
+                        hint: "Email hoặc Số điện thoại",
+                        icon: Icons.alternate_email,
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      // PASSWORD
+                      _buildInput(
+                        controller: password,
+                        hint: "Mật khẩu",
+                        icon: Icons.lock_outline,
+                        obscure: obscurePassword,
+                        suffix: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              obscurePassword = !obscurePassword;
+                            });
+                          },
+                          icon: Icon(
+                            obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      Row(
+                        children: [
+                          Transform.scale(
+                            scale: .9,
+                            child: Checkbox(
+                              value: rememberMe,
+                              activeColor: const Color(0xff137FEC),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              onChanged: (v) {
+                                setState(() {
+                                  rememberMe = v ?? false;
+                                });
+                              },
+                            ),
+                          ),
+
+                          const Text(
+                            "Ghi nhớ",
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+
+                          const Spacer(),
+
+                          TextButton(
+                            onPressed: () {},
+                            child: const Text(
+                              "Quên mật khẩu?",
+                              style: TextStyle(
+                                color: Color(0xffFF8A3D),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // LOGIN BUTTON
+                      SizedBox(
+                        width: double.infinity,
+                        height: 58,
+                        child: ElevatedButton(
+                          onPressed: isLoading ? null : login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff137FEC),
+                            elevation: 8,
+                            shadowColor: const Color(
+                              0xff137FEC,
+                            ).withOpacity(.35),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Text(
+                                  "Đăng nhập",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.grey.shade300)),
+
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            child: Text(
+                              "HOẶC",
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+
+                          Expanded(child: Divider(color: Colors.grey.shade300)),
+                        ],
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // GOOGLE BUTTON
+                      GestureDetector(
+                        onTap: loginGoogle,
+                        child: Container(
+                          height: 58,
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.network(
+                                'https://cdn-icons-png.flaticon.com/512/300/300221.png',
+                                width: 24,
+                                height: 24,
+                              ),
+
+                              const SizedBox(width: 14),
+
+                              const Text(
+                                "Đăng nhập với Google",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xff374151),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, "/register");
+                        },
+                        child: const Text(
+                          "Bạn chưa có tài khoản? Đăng ký",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xff137FEC),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInput({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool obscure = false,
+    Widget? suffix,
+  }) {
+    return Container(
+      height: 62,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(.85),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 18),
+
+          Icon(icon, color: Colors.grey.shade400),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: TextField(
+              controller: controller,
+              obscureText: obscure,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: hint,
+                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 15),
+              ),
+            ),
+          ),
+
+          if (suffix != null) suffix,
+
+          const SizedBox(width: 8),
+        ],
       ),
     );
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/price_helper.dart';
 import '../../models/product.dart';
 import '../../models/variant.dart';
 
@@ -10,9 +12,10 @@ class ProductInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final price = variant?.price ?? product.minPrice;
-    final oldPrice = variant?.oldPrice;
+    final price = PriceHelper.getEffectivePrice(product, variant);
+    final oldPrice = PriceHelper.getOriginalPrice(product, variant);
     final isFlashSale = variant?.flashSale == true;
+    final discountPercent = PriceHelper.getDiscountPercent(product, variant);
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -28,17 +31,17 @@ class ProductInfo extends StatelessWidget {
           Row(
             children: [
               Text(
-                "\$${price.toStringAsFixed(0)}",
+                formatVND(price),
                 style: TextStyle(
                   color: isFlashSale ? Colors.red : const Color(0xff137fec),
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              if (oldPrice != null && oldPrice > price) ...[
+              if (oldPrice > price) ...[
                 const SizedBox(width: 8),
                 Text(
-                  "\$${oldPrice.toStringAsFixed(0)}",
+                  formatVND(oldPrice),
                   style: const TextStyle(
                     decoration: TextDecoration.lineThrough,
                     color: Colors.grey,
@@ -55,7 +58,7 @@ class ProductInfo extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    "-${(((oldPrice - price) / oldPrice) * 100).round()}%",
+                    "-$discountPercent%",
                     style: const TextStyle(
                       color: Color(0xff137fec),
                       fontSize: 12,

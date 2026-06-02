@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import toast from 'react-hot-toast';
+import toast from '../utils/toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import { useAuth } from '../hooks/useAuth';

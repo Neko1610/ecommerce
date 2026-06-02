@@ -11,21 +11,15 @@ class ExploreSearch extends StatefulWidget {
 }
 
 class _ExploreSearchState extends State<ExploreSearch> {
-
   final controller = TextEditingController();
   Timer? _debounce;
 
   void onSearch(String value) {
-
     /// 🔥 debounce 300ms
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
     _debounce = Timer(const Duration(milliseconds: 300), () {
-
-      context.read<ProductProvider>().fetchProducts(
-        keyword: value,
-      );
-
+      context.read<ProductProvider>().fetchProducts(keyword: value);
     });
   }
 

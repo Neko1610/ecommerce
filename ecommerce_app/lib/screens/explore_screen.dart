@@ -16,7 +16,6 @@ class ExploreScreen extends StatefulWidget {
 }
 
 class _ExploreScreenState extends State<ExploreScreen> {
-
   @override
   void initState() {
     super.initState();

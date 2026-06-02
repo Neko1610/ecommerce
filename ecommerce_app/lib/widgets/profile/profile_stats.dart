@@ -36,7 +36,7 @@ class _ProfileStatsState extends State<ProfileStats> {
       children: [
         _item(
           context,
-          value: orderCount.toString(), // 🔥 dynamic
+          value: orderCount.toString(),
           label: "Orders",
           color: Colors.blue,
           onTap: () {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/product.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/price_helper.dart';
 import '../../providers/WishlistProvider.dart';
 import '../../screens/product_detail_screen.dart';
 
@@ -13,8 +15,8 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final variant = product.variants.isNotEmpty ? product.variants.first : null;
-    final price = variant?.price ?? product.minPrice;
-    final oldPrice = variant?.oldPrice;
+    final price = PriceHelper.getEffectivePrice(product, variant);
+    final oldPrice = PriceHelper.getOriginalPrice(product, variant);
     final isFlashSale = variant?.flashSale == true;
 
     return GestureDetector(
@@ -89,15 +91,15 @@ class ProductCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "\$${price.toStringAsFixed(0)}",
+                    formatVND(price),
                     style: TextStyle(
                       color: isFlashSale ? Colors.red : const Color(0xff137fec),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (oldPrice != null && oldPrice > price)
+                  if (oldPrice > price)
                     Text(
-                      "\$${oldPrice.toStringAsFixed(0)}",
+                      formatVND(oldPrice),
                       style: const TextStyle(
                         decoration: TextDecoration.lineThrough,
                         color: Colors.grey,

@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
+import toast from '../utils/toast';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import SearchInput from '../components/SearchInput';
 import Table, { type TableColumn } from '../components/Table';
 import { orderService } from '../services/orderService';
 import { ORDER_STATUSES, type OrderDetail, type OrderSummary } from '../types';
+import { formatOrderTotalVND, formatRawVND, formatVND } from '../utils/currency';
 
 const statusClassName: Record<string, string> = {
   PENDING: 'bg-amber-50 text-amber-600',
@@ -148,7 +149,11 @@ function OrderPage() {
     {
       key: 'total',
       header: 'Total',
-      render: (order) => <span className="font-medium text-slate-900">${order.total.toFixed(2)}</span>,
+      render: (order) => (
+        <span className="font-medium text-slate-900">
+          {formatOrderTotalVND(order.subtotal, order.discount, order.shippingFee)}
+        </span>
+      ),
     },
     {
       key: 'actions',
@@ -242,13 +247,17 @@ function OrderPage() {
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Shipping Fee</p>
                 <p className="mt-2 text-lg font-semibold text-slate-900">
-                  ${selectedOrder.order.shippingFee.toFixed(2)}
+                  {formatRawVND(selectedOrder.order.shippingFee)}
                 </p>
               </div>
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Total</p>
                 <p className="mt-2 text-lg font-semibold text-slate-900">
-                  ${selectedOrder.order.total.toFixed(2)}
+                  {formatOrderTotalVND(
+                    selectedOrder.order.subtotal,
+                    selectedOrder.order.discount,
+                    selectedOrder.order.shippingFee,
+                  )}
                 </p>
               </div>
             </div>
@@ -276,7 +285,7 @@ function OrderPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-slate-900">x{item.quantity}</p>
-                    <p className="mt-1 text-xs text-slate-500">${item.price.toFixed(2)}</p>
+                    <p className="mt-1 text-xs text-slate-500">{formatVND(item.price)}</p>
                   </div>
                 </div>
               ))}

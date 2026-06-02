@@ -2,8 +2,13 @@ import 'dart:convert';
 import 'package:ecommerce_app/services/cart_service.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/utils/currency_formatter.dart';
+import '../core/utils/snackbar_helper.dart';
+import '../models/payment_method_model.dart';
+import '../providers/PaymentProvider.dart';
 import '../widgets/checkout/address_section.dart';
 import '../widgets/checkout/shipping_method_section.dart';
 import '../widgets/checkout/payment_method_section.dart';
@@ -12,6 +17,8 @@ import '../widgets/checkout/checkout_bottom_bar.dart';
 import '../services/order_service.dart';
 import '../services/api_client.dart';
 import '../models/cart_item.dart';
+import '../services/momo_service.dart';
+import 'payment_webview.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final List<CartItem> cart;
@@ -38,7 +45,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   final orderService = OrderService();
 
-  double get total => widget.totalPrice + shippingFee;
+  double get productTotalVND => toVND(widget.totalPrice);
+  double get total => productTotalVND + shippingFee;
 
   Future<String> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -74,7 +82,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       setState(() {
         selectedAddressId = addressId;
-        baseShipping = vnd / 24000; // USD
+        baseShipping = vnd;
         shippingFee = baseShipping;
       });
     });
@@ -86,37 +94,113 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }).toList();
   }
 
+  String effectivePaymentMethod() {
+    final selected = context.read<PaymentProvider>().selectedMethod;
+
+    if (selected == null) {
+      return paymentMethod;
+    }
+
+    switch (selected.type) {
+      case PaymentType.momo:
+      case PaymentType.zaloPay:
+        return "WALLET";
+      case PaymentType.creditCard:
+        return "CARD";
+      case PaymentType.bank:
+        return "BANK";
+    }
+  }
+
   void handleCheckout() async {
     if (selectedAddressId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      showAppSnackBar(
+        context,
         const SnackBar(content: Text("Vui lòng chọn địa chỉ")),
       );
+
       return;
     }
 
     try {
+      final checkoutPaymentMethod = effectivePaymentMethod();
+
+      /// 🔥 MOMO
+      if (checkoutPaymentMethod == "WALLET") {
+        final momoResponse = await MomoService.createPayment(total.toInt());
+
+        if (!mounted) return;
+
+        final result = await Navigator.push(
+          context,
+
+          MaterialPageRoute(
+            builder: (_) => PaymentWebView(paymentUrl: momoResponse.payUrl),
+          ),
+        );
+
+        /// 🔥 PAYMENT SUCCESS
+        if (result == true) {
+          await orderService.checkout({
+            "addressId": selectedAddressId,
+
+            "phone": "0123456789",
+
+            "paymentMethod": "MOMO",
+
+            "voucherCode": widget.voucherCode,
+
+            "items": mapCart(),
+          });
+
+          await CartService().clearCart();
+
+          if (!mounted) return;
+
+          widget.cart.clear();
+
+          Navigator.pop(context);
+
+          showAppSnackBar(
+            context,
+            const SnackBar(content: Text("Thanh toán thành công ✅")),
+          );
+        }
+
+        return;
+      }
+
+      /// 🔥 COD
       await orderService.checkout({
         "addressId": selectedAddressId,
+
         "phone": "0123456789",
-        "paymentMethod": paymentMethod,
+
+        "paymentMethod": checkoutPaymentMethod,
+
         "voucherCode": widget.voucherCode,
+
         "items": mapCart(),
       });
 
       if (!mounted) return;
 
       await CartService().clearCart();
+
+      if (!mounted) return;
+
       widget.cart.clear();
 
       Navigator.pop(context);
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      showAppSnackBar(
+        context,
         const SnackBar(content: Text("Đặt hàng thành công ✅")),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Checkout lỗi ❌")),
-      );
+      if (!mounted) return;
+
+      showAppSnackBar(context, SnackBar(content: Text("Checkout lỗi: $e")));
     }
   }
 
@@ -125,10 +209,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       backgroundColor: const Color(0xfff6f7f8),
 
-      appBar: AppBar(
-        title: const Text("Checkout"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("Checkout"), centerTitle: true),
 
       bottomNavigationBar: CheckoutBottomBar(
         total: total,
@@ -140,9 +221,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            AddressSection(
-              onSelect: calculateShipping,
-            ),
+            AddressSection(onSelect: calculateShipping),
 
             const SizedBox(height: 12),
 

@@ -3,7 +3,6 @@ import 'package:ecommerce_app/providers/ProductProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/home/header_widget.dart';
-import '../widgets/home/search_bar_widget.dart';
 import '../widgets/home/banner_widget.dart';
 import '../widgets/home/category_grid.dart';
 import '../widgets/home/flash_sale_section.dart';
@@ -37,9 +36,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final screens = [
       _buildHome(),
-      ExploreScreen(), 
+      ExploreScreen(),
       CartScreen(),
-      WishlistScreen(), 
+      WishlistScreen(),
       const ProfileScreen(),
     ];
 
@@ -83,7 +82,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             HeaderWidget(),
-            SearchBarWidget(),
             BannerWidget(),
             CategoryGrid(),
             FlashSaleSection(),

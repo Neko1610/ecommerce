@@ -5,7 +5,7 @@ class QuantitySelector extends StatelessWidget {
   final VoidCallback onIncrease;
   final VoidCallback onDecrease;
 
-  const QuantitySelector({
+  const QuantitySelector({super.key, 
     required this.quantity,
     required this.onIncrease,
     required this.onDecrease,

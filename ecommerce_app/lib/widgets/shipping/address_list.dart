@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../screens/add_address_screen.dart';
 import '../../widgets/shipping/adress_card.dart';
-import "../../screens/map_picker_screen.dart";
 
 class AddressList extends StatefulWidget {
   const AddressList({super.key});

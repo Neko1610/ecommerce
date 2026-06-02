@@ -5,6 +5,9 @@ export interface OrderSummary {
   id: number;
   status: OrderStatus | string;
   total: number;
+  subtotal: number;
+  discount: number;
+  shippingFee: number;
   createdAt: string;
   images: string[];
   title: string;

@@ -53,7 +53,7 @@ class _VoucherInputState extends State<VoucherInput> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 decoration: BoxDecoration(
-                  color: Color(0xff137fec).withOpacity(0.1),
+                  color: Color(0xff137fec).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

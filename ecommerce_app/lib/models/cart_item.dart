@@ -46,16 +46,16 @@ class CartItem {
     "quantity": quantity,
   };
   factory CartItem.fromJson(Map<String, dynamic> json) {
-  return CartItem(
-    id: json['id'],
-    variantId: json['variantId'],
-    productName: json['productName'],
-    productImage: json['productImage'],
-    color: json['color'],
-    size: json['size'],
-    price: (json['price']).toDouble(),
-    stock: json['stock'],
-    quantity: json['quantity'],
-  );
-}
+    return CartItem(
+      id: json['id'],
+      variantId: json['variantId'],
+      productName: json['productName'],
+      productImage: json['productImage'],
+      color: json['color'],
+      size: json['size'],
+      price: (json['price']).toDouble(),
+      stock: json['stock'],
+      quantity: json['quantity'],
+    );
+  }
 }

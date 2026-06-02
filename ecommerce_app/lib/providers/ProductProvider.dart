@@ -7,24 +7,21 @@ class ProductProvider with ChangeNotifier {
   bool isLoading = false;
   String? error;
 
-Future<void> fetchProducts({
-  int? categoryId,
-  String? keyword,
-}) async {
-  try {
-    isLoading = true;
-    error = null;
+  Future<void> fetchProducts({int? categoryId, String? keyword}) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      products = await ProductService().getProducts(
+        categoryId: categoryId,
+        keyword: keyword,
+      );
+    } catch (e) {
+      error = e.toString();
+    }
+
+    isLoading = false;
     notifyListeners();
-
-    products = await ProductService().getProducts(
-      categoryId: categoryId,
-      keyword: keyword,
-    );
-  } catch (e) {
-    error = e.toString();
   }
-
-  isLoading = false;
-  notifyListeners();
-}
 }

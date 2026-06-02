@@ -15,21 +15,16 @@ class WishlistScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xfff6f7f8),
 
-      appBar: AppBar(
-        title: const Text("Wishlist"),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text("Wishlist"), elevation: 0),
 
       body: Consumer2<WishlistProvider, ProductProvider>(
         builder: (context, wishlist, productProvider, _) {
-
           final products = productProvider.products
               .where((p) => wishlist.isFavorite(p.id))
               .toList();
 
           return Column(
             children: [
-
               /// 🔥 HEADER
               WishlistHeader(count: products.length),
 

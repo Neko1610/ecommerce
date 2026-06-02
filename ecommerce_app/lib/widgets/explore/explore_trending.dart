@@ -20,7 +20,6 @@ class ExploreTrending extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           /// 🔥 TITLE
           Row(
             children: const [
@@ -28,10 +27,7 @@ class ExploreTrending extends StatelessWidget {
               SizedBox(width: 6),
               Text(
                 "Xu hướng tìm kiếm",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ],
           ),
@@ -46,13 +42,13 @@ class ExploreTrending extends StatelessWidget {
               return GestureDetector(
                 onTap: () {
                   /// 👉 SEARCH
-                  context.read<ProductProvider>().fetchProducts(
-                    keyword: e,
-                  );
+                  context.read<ProductProvider>().fetchProducts(keyword: e);
                 },
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),

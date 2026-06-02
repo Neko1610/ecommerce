@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/currency_formatter.dart';
 
 class OrderSummarySection extends StatelessWidget {
   final double subtotal;
@@ -15,16 +15,16 @@ class OrderSummarySection extends StatelessWidget {
 
   Widget row(
     String title,
-    double value,
-    NumberFormat usd, {
+    double value, {
     bool bold = false,
+    bool rawVND = false,
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title),
         Text(
-          usd.format(value), // 🔥 FIX
+          rawVND ? formatRawVND(value) : formatVND(value),
           style: TextStyle(
             fontWeight: bold ? FontWeight.bold : FontWeight.normal,
           ),
@@ -35,12 +35,6 @@ class OrderSummarySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final usd = NumberFormat.currency(
-      locale: 'en_US',
-      symbol: '\$',
-      decimalDigits: 0,
-    );
-
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -49,11 +43,11 @@ class OrderSummarySection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          row("Subtotal", subtotal, usd),
+          row("Subtotal", subtotal),
           const SizedBox(height: 6),
-          row("Shipping", shipping, usd),
+          row("Shipping", shipping, rawVND: true),
           const Divider(),
-          row("Total", total, usd, bold: true),
+          row("Total", total, bold: true, rawVND: true),
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/utils/currency_formatter.dart';
 import '../../models/cart_item.dart';
 import 'quantity_selector.dart';
 
@@ -55,7 +56,7 @@ class CartItemWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      "\$${item.price.toStringAsFixed(0)}",
+                      formatVND(item.price),
                       style: const TextStyle(
                         color: Color(0xff137fec),
                         fontWeight: FontWeight.bold,

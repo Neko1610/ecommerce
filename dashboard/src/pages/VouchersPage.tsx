@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
+import toast from '../utils/toast';
 import EmptyState from '../components/EmptyState';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHeader from '../components/PageHeader';
@@ -7,6 +7,7 @@ import SearchInput from '../components/SearchInput';
 import VoucherFormModal from '../components/VoucherFormModal';
 import { voucherService } from '../services/voucherService';
 import { Voucher, VoucherPayload } from '../types';
+import { formatVND } from '../utils/currency';
 
 function VouchersPage() {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
@@ -145,7 +146,7 @@ function VouchersPage() {
                       <td className="px-6 py-4">
                         {new Date(voucher.expiryDate).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4">${voucher.minOrder.toFixed(2)}</td>
+                      <td className="px-6 py-4">{formatVND(voucher.minOrder)}</td>
                       <td className="px-6 py-4">
                         <button
                           type="button"

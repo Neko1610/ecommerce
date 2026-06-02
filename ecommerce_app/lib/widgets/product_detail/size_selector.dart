@@ -44,7 +44,7 @@ class SizeSelector extends StatelessWidget {
                   width: isSelected ? 2 : 1,
                 ),
                 color: isSelected
-                    ? Color(0xff137fec).withOpacity(0.1)
+                    ? Color(0xff137fec).withValues(alpha: 0.1)
                     : Colors.white,
               ),
               child: Text(

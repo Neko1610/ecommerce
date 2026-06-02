@@ -92,7 +92,7 @@ class MapViewState extends State<MapView> {
         initialCenter: LatLng(10.76, 106.66),
         initialZoom: 13,
         onPositionChanged: (pos, hasGesture) {
-          if (hasGesture && pos.center != null) {
+          if (hasGesture) {
             center = pos.center;
             onMapMove(center!);
           }

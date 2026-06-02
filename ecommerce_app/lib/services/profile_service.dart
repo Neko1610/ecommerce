@@ -11,30 +11,29 @@ class UserService {
     return prefs.getString("token") ?? "";
   }
 
- Future<Profile> getProfile() async {
-  final token = await getToken();
+  Future<Profile> getProfile() async {
+    final token = await getToken();
 
-  final res = await http.get(
-    Uri.parse("$baseUrl/profile"),
-    headers: {
-      "Authorization": "Bearer $token",
-    },
-  );
+    final res = await http.get(
+      Uri.parse("$baseUrl/profile"),
+      headers: {"Authorization": "Bearer $token"},
+    );
 
-  print("STATUS: ${res.statusCode}");
-  print("BODY: ${res.body}");
+    print("STATUS: ${res.statusCode}");
+    print("BODY: ${res.body}");
 
-  if (res.statusCode != 200) {
-    throw Exception("API error: ${res.statusCode}");
+    if (res.statusCode != 200) {
+      throw Exception("API error: ${res.statusCode}");
+    }
+
+    if (res.body.isEmpty) {
+      throw Exception("Empty response from server");
+    }
+
+    final data = jsonDecode(res.body);
+    return Profile.fromJson(data);
   }
 
-  if (res.body.isEmpty) {
-    throw Exception("Empty response from server");
-  }
-
-  final data = jsonDecode(res.body);
-  return Profile.fromJson(data);
-}
   Future<void> updateProfile(String fullName, String phone) async {
     final token = await getToken();
 
@@ -44,10 +43,7 @@ class UserService {
         "Authorization": "Bearer $token",
         "Content-Type": "application/json",
       },
-      body: jsonEncode({
-        "fullName": fullName,
-        "phone": phone,
-      }),
+      body: jsonEncode({"fullName": fullName, "phone": phone}),
     );
   }
 }

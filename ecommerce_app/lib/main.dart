@@ -5,14 +5,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
 
+import 'screens/Splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screens.dart';
+
 import 'providers/CartProvider.dart';
 import 'providers/ProductProvider.dart';
 import 'providers/CategoryProvider.dart';
 import 'providers/WishlistProvider.dart';
 import 'providers/ProfileProvider.dart';
+import 'providers/PaymentProvider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,39 +25,50 @@ void main() async {
   );
 
   final prefs = await SharedPreferences.getInstance();
-  
+
   final token = prefs.getString('token');
+
   final isLoggedIn = token != null;
 
- runApp(
-  MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => CartProvider()),
-      ChangeNotifierProvider(create: (_) => ProductProvider()),
-      ChangeNotifierProvider(create: (_) => CategoryProvider()),
-      ChangeNotifierProvider(create: (_) => WishlistProvider()),
-      ChangeNotifierProvider(create: (_) => ProfileProvider()),
-    ],
-    child: MyApp(isLoggedIn: isLoggedIn),
-  ),
-);
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => WishlistProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentProvider()),
+      ],
+      child: MyApp(isLoggedIn: isLoggedIn),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   final bool isLoggedIn;
 
-  const MyApp({super.key, required this.isLoggedIn});
+  const MyApp({
+    super.key,
+    required this.isLoggedIn,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
-      initialRoute: isLoggedIn ? "/home" : "/login",
+      initialRoute: "/",
 
       routes: {
+        "/": (context) => SplashScreen(
+              isLoggedIn: isLoggedIn,
+            ),
+
         "/login": (context) => const LoginScreen(),
+
         "/register": (context) => const RegisterScreen(),
+
         "/home": (context) => const HomeScreen(),
       },
     );

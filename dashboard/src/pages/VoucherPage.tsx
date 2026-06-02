@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
+import toast from '../utils/toast';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import SearchInput from '../components/SearchInput';
 import Table, { type TableColumn } from '../components/Table';
 import { voucherService } from '../services/voucherService';
 import type { Voucher, VoucherPayload } from '../types';
+import { formatVND } from '../utils/currency';
 
 const initialForm: VoucherPayload = {
   code: '',
@@ -134,7 +135,7 @@ function VoucherPage() {
     {
       key: 'minOrder',
       header: 'Min Order',
-      render: (voucher) => <span>${voucher.minOrder.toFixed(2)}</span>,
+      render: (voucher) => <span>{formatVND(voucher.minOrder)}</span>,
     },
     {
       key: 'active',

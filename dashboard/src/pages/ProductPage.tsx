@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
+import toast from '../utils/toast';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import Pagination from '../components/Pagination';
@@ -8,6 +8,7 @@ import Table, { type TableColumn } from '../components/Table';
 import { categoryService } from '../services/categoryService';
 import { productService } from '../services/productService';
 import type { Category, Product, ProductPayload, ProductVariant, VariantPayload } from '../types';
+import { formatVND } from '../utils/currency';
 
 const PAGE_SIZE = 6;
 
@@ -283,7 +284,7 @@ function ProductPage() {
       header: 'Price Range',
       render: (product) => (
         <span className="font-medium text-slate-900">
-          ${product.minPrice.toFixed(2)} - ${product.maxPrice.toFixed(2)}
+          {formatVND(product.minPrice)} - {formatVND(product.maxPrice)}
         </span>
       ),
     },
@@ -458,7 +459,7 @@ function ProductPage() {
                           {variant.color} / {variant.size}
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
-                          ${variant.price.toFixed(2)} | Stock: {variant.stock}
+                          {formatVND(variant.price)} | Stock: {variant.stock}
                         </p>
                       </div>
                     </div>

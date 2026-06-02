@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/currency_formatter.dart';
 
 class OrderSummary extends StatelessWidget {
   final Map<String, dynamic> order;
@@ -8,12 +8,13 @@ class OrderSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final format = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
-
-    final total = order['total'] ?? 0;
-    final shipping = order['shipping'] ?? 0;
-    final tax = order['tax'] ?? 0;
-    final subtotal = total - shipping - tax;
+    final subtotal = (order['subtotal'] as num?)?.toDouble() ?? 0;
+    final discount = (order['discount'] as num?)?.toDouble() ?? 0;
+    final shipping =
+        (order['shippingFee'] as num?)?.toDouble() ??
+        (order['shipping'] as num?)?.toDouble() ??
+        0;
+    final total = toVND(subtotal - discount) + shipping;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -23,11 +24,11 @@ class OrderSummary extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _row("Tạm tính", format.format(subtotal)),
-          _row("Vận chuyển", format.format(shipping)),
-          _row("Thuế", format.format(tax)),
+          _row("Tạm tính", formatVND(subtotal)),
+          if (discount > 0) _row("Giảm giá", formatVND(-discount)),
+          _row("Vận chuyển", formatRawVND(shipping)),
           const Divider(color: Colors.white24),
-          _row("Tổng", format.format(total), isBold: true),
+          _row("Tổng", formatRawVND(total), isBold: true),
         ],
       ),
     );

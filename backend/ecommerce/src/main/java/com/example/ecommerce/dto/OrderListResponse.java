@@ -9,6 +9,9 @@ public class OrderListResponse {
     private Long id;
     private String status;
     private Double total;
+    private Double subtotal;
+    private Double discount;
+    private Double shippingFee;
     private String createdAt;
 
     private List<String> images;

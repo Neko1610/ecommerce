@@ -14,16 +14,10 @@ class WishlistHeader extends StatelessWidget {
         children: [
           Text(
             "Your Saved Items ($count)",
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
 
-          TextButton(
-            onPressed: () {},
-            child: const Text("Share"),
-          )
+          TextButton(onPressed: () {}, child: const Text("Share")),
         ],
       ),
     );

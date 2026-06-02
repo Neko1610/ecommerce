@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class ProfileHeader extends StatelessWidget {
   final VoidCallback onLogout;
 
-  const ProfileHeader({
-    super.key,
-    required this.onLogout,
-  });
+  const ProfileHeader({super.key, required this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -55,10 +52,7 @@ class ProfileHeader extends StatelessWidget {
 
         const SizedBox(height: 4),
 
-        const Text(
-          "j.doe@email.com",
-          style: TextStyle(color: Colors.grey),
-        ),
+        const Text("j.doe@email.com", style: TextStyle(color: Colors.grey)),
       ],
     );
   }
